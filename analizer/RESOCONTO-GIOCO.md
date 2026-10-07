@@ -502,7 +502,7 @@ Dati certi sull'ordine: la sterzata precede il passo [M]. Il resto dell'ordine v
 | frequenza vera | 60,0 Hz (le misure di allora dicevano 61,25: stesso artefatto del `ts`) | **60,0 Hz** |
 | movimento, corpo, arena, commissione del 10 % | — | **invariati** |
 
-Quindi **il server può cambiare senza preavviso**. La fisica di oggi è quella della verità del server, fissa nel simulatore (che randomizza solo rete e tick). Per accorgersi di un cambiamento, **riesegui** `analizer` ogni tanto e confronta: un valore «smentito» o diverso nell'estratto va controllato e, se è un cambiamento vero, riportato a mano nella fisica del simulatore. L'estratto non la sovrascrive: `from_analizer` prende solo tick, arena, `rttMs` e anelli per orb del bottino.
+Quindi **il server può cambiare senza preavviso**. La fisica di oggi è quella della verità del server, fissa nel simulatore (che randomizza solo rete e tick). Per accorgersi di un cambiamento, **riesegui** `analizer` ogni tanto e confronta: un valore «smentito» o diverso nell'estratto va controllato e, se è un cambiamento vero, riportato a mano nella fisica del simulatore. L'estratto non la sovrascrive e il simulatore non lo legge da solo (solo con `--analizer FILE`, e allora prende soltanto tick, arena, `rttMs` e anelli per orb del bottino): i default di `config.rs` sono gli stessi su ogni macchina.
 
 ---
 

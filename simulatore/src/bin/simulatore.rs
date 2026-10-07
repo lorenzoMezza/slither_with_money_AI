@@ -6,8 +6,9 @@
 //!   simulatore bench     [--mondi 64] [--secondi 10]                                  velocita' di simulazione
 //!   simulatore parametri                                                              i parametri in uso
 //!
-//! Opzione comune: --analizer FILE (default ../analizer/estratto/simulatore.json se esiste)
-//! per prendere i parametri misurati dall'ultimo estratto.
+//! Opzione comune: --analizer FILE per prendere da un estratto le grandezze che la fisica
+//! vera non copre (tick, arena, RTT, orb di bottino per anello). Senza, si usano i default
+//! di config.rs: identici su ogni macchina (Mac o RunPod), come l'addestramento.
 
 use simulatore::bots::Brain;
 use simulatore::config::{EnvConfig, Params};
@@ -33,16 +34,9 @@ impl Args {
     }
 }
 
-fn default_analizer() -> Option<String> {
-    for c in ["../analizer/estratto/simulatore.json", "analizer/estratto/simulatore.json"] {
-        if Path::new(c).exists() { return Some(c.to_string()); }
-    }
-    None
-}
-
 fn base_config(a: &Args) -> EnvConfig {
     let mut cfg = EnvConfig::default();
-    let path = a.val("--analizer").map(String::from).or_else(default_analizer);
+    let path = a.val("--analizer").map(String::from);
     if let Some(p) = path {
         match Params::from_analizer(&p) {
             Ok((params, used)) => {

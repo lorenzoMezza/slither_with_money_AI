@@ -120,11 +120,13 @@ class SlitherVecEnv:
     """
 
     def __init__(self, num_envs: int = 16, agents_per_env: int = 1, seed: int = 1, *,
-                 randomize: bool = False, analizer: str | None = "auto", action_mode: str = "relativo",
+                 randomize: bool = False, analizer: str | None = None, action_mode: str = "relativo",
                  lobby: dict | None = None, reward: dict | None = None, params: dict | None = None,
                  max_episode_s: float = 600.0, rejoin_delay_s: float = 1.0, decision_ms: float = 0.0,
                  match_mode: bool = False, lib_path: str | None = None):
         self._lib = _Lib.load(_find_library(lib_path))
+        # Senza `analizer` valgono i default di config.rs: lo stesso mondo su ogni macchina.
+        # Con `analizer="auto"` si prende l'estratto locale, se c'e' (solo per esperimenti).
         if analizer == "auto":
             cand = _ROOT.parent / "analizer" / "estratto" / "simulatore.json"
             analizer = str(cand) if cand.exists() else None

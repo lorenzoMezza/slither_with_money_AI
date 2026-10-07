@@ -16,17 +16,19 @@ prima si osserva il gioco vero, poi lo si riproduce fedelmente.
 ## Come si incastrano
 
 ```text
-gioco vero ──► analizer ──► analizer/estratto/simulatore.json ──► simulatore ──► allenamento
-                  ▲                                                    │
-                  └──── simulatore registra + confronta.mjs ◄──────────┘
-                        (lo stesso analizzatore misura anche il simulatore)
+gioco vero ──► analizer ──► misure ──(a mano)──► simulatore/src/config.rs ──► simulatore ──► allenamento
+                  ▲                                                                    │
+                  └──────────── simulatore registra + confronta.mjs ◄──────────────────┘
+                                (lo stesso analizzatore misura anche il simulatore)
 ```
 
 La fisica del server (movimento, corpo, taglia, boost, crescita, cibo, collisioni,
 cashout con il 10 % di commissione) è la verità data dall'utente il 2026-10-07 ed è
-fissa nel simulatore (`simulatore/src/config.rs`, campi `[V]`). L'analizzatore misura
-il resto (tick, arena, rete), e il simulatore legge solo quello. Le partite simulate
-vengono poi rimisurate dallo stesso analizzatore e confrontate con quelle vere.
+fissa nel simulatore (`simulatore/src/config.rs`, campi `[V]`). Il resto (tick, arena,
+rete) è misurato dall'analizzatore e scritto anch'esso nei default di `config.rs`.
+Il simulatore **non legge l'estratto da solo**: così l'addestramento sul Mac e su
+RunPod gira esattamente nello stesso mondo (cambiano solo scala e hardware). Le partite
+simulate vengono poi rimisurate dallo stesso analizzatore e confrontate con quelle vere.
 
 ## Iniziare
 

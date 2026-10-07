@@ -8,8 +8,10 @@ e la fisica del **server**: quelle che servono a costruire un simulatore fedele.
 Il risultato è una cartella, `estratto/`, con le misure e un `simulatore.json`.
 La fisica del simulatore però **non** viene da lì: è la verità del server, data
 dall'utente il 7 ottobre 2026 (riassunta in `RESOCONTO-GIOCO.md`), ed è fissa.
-Dall'estratto il simulatore prende solo tick, arena, RTT e anelli per orb del
-bottino (`from_analizer`).
+Il simulatore non lo legge da solo: usa i default di `simulatore/src/config.rs`, uguali
+su ogni macchina. Solo con `--analizer FILE` prende dall'estratto tick, arena, RTT e
+anelli per orb del bottino (`from_analizer`); un cambiamento vero del server va
+riportato a mano in `config.rs`.
 
 ## Uso
 

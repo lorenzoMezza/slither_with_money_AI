@@ -67,8 +67,11 @@ Le unità di misura:
 - si entra con una posta, saldo 1 e taglia 100.
 
 Il simulatore (`simulatore/`, Rust) riproduce la fisica del server, data dall'utente il
-7 ottobre 2026 come certa. L'analizzatore (`analizer/`, registrazioni CDP del gioco
-vero) fornisce solo tick, arena, RTT e anelli per orb del bottino. I fatti principali:
+7 ottobre 2026 come certa. Tick, arena, RTT e anelli per orb del bottino sono le misure
+dell'analizzatore (`analizer/`, registrazioni CDP del gioco vero), scritte nei default
+di `simulatore/src/config.rs`. Nessun estratto viene letto da solo: l'addestramento sul
+Mac e su RunPod gira nello stesso identico mondo, cambiano solo scala (lobby, minibatch)
+e hardware. I fatti principali:
 
 - 60 Hz. Uno snapshot ogni 1/2/3/4 tick (0,8/45,8/53,1/0,3 %), quindi ~24 decisioni
   al secondo.

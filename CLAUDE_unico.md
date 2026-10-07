@@ -111,7 +111,8 @@ propria `config.json` e la ricarica quando riparte.
 ## Fisica del server: VERITÀ data dall'utente il 2026-10-07 (`simulatore/src/config.rs`, campi [V])
 
 Verità assoluta: nel simulatore è fissa, non si randomizza (si randomizzano solo rete e
-tick) e l'estratto dell'analizzatore non la sovrascrive. Ogni file del repository la deve
+tick) e l'estratto dell'analizzatore non la sovrascrive (il simulatore lo legge solo con
+`--analizer FILE`: Mac e RunPod girano nello stesso mondo, cambiano solo scala e hardware). Ogni file del repository la deve
 rispecchiare; le regole che sostituisce non vanno più menzionate.
 
 - **Movimento**: sterzata 8,1 rad/s = 0,135 rad/tick verso targetAngle; passo 4,8 + 5,7·boostAmount

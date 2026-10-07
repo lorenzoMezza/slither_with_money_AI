@@ -25,9 +25,11 @@ cargo build --release
 
 La fisica del server è la **verità data dall'utente il 2026-10-07** (tabella più
 sotto), scritta in `src/config.rs` (campi `[V]`): è fissa e nessun estratto la
-sovrascrive. Da `../analizer/estratto/simulatore.json`, se c'è (`--analizer FILE`
-per un altro estratto), si leggono solo le grandezze che la verità non copre:
-frequenza dei tick, arena, RTT, orb di bottino per anello.
+sovrascrive. Le grandezze che la verità non copre (frequenza dei tick, arena, RTT, orb
+di bottino per anello) sono i valori misurati, scritti anch'essi nei default. Nessun
+estratto viene letto da solo, quindi il mondo è identico su ogni macchina (Mac o
+RunPod); solo per esperimenti, `--analizer FILE` (o `analizer="auto"` da Python) prende
+quelle quattro grandezze da un estratto.
 
 ## Da Python
 
