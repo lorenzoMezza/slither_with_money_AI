@@ -103,7 +103,7 @@ Sul Mac si caricano come qualunque checkpoint con `guarda.py`, `sfida.py` e
   - Linux con CUDA e PyTorch già installato (le immagini RunPod lo hanno);
   - rete per rustup e `apt` la prima volta;
   - ~6 GB di spazio per Rust e la build.
-- **Non serve**: Node (l'analizzatore non gira qui; il simulatore usa i parametri
-  misurati scritti nei default) e un browser.
+- **Non serve**: Node (l'analizzatore non gira qui; il simulatore usa la fisica vera
+  del server e i parametri misurati scritti nei default) e un browser.
 - **Costo**: il pod costa finché è acceso. Fai `make ferma`, poi spegnilo. Con il
   repository in `/workspace` la corsa riprende al prossimo lancio.

@@ -22,9 +22,11 @@ gioco vero ──► analizer ──► analizer/estratto/simulatore.json ──
                         (lo stesso analizzatore misura anche il simulatore)
 ```
 
-L'analizzatore misura il server. Il simulatore legge le misure e si allinea da
-solo. Le partite simulate vengono poi rimisurate dallo stesso analizzatore e
-confrontate con quelle vere.
+La fisica del server (movimento, corpo, taglia, boost, crescita, cibo, collisioni,
+cashout con il 10 % di commissione) è la verità data dall'utente il 2026-10-07 ed è
+fissa nel simulatore (`simulatore/src/config.rs`, campi `[V]`). L'analizzatore misura
+il resto (tick, arena, rete), e il simulatore legge solo quello. Le partite simulate
+vengono poi rimisurate dallo stesso analizzatore e confrontate con quelle vere.
 
 ## Iniziare
 
@@ -67,5 +69,5 @@ Tutto ciò che è ignorato e non è un dato personale si rigenera:
 - `target/` con `cargo build`;
 - `allenamento/corse/` sono le corse di addestramento (pesi e registri): pesanti, si rifanno;
 
-Senza sessioni registrate il simulatore usa i valori misurati il 4–5 ottobre
-2026, scritti come default in `simulatore/src/config.rs`.
+Senza sessioni registrate il simulatore usa i default di `simulatore/src/config.rs`:
+la fisica vera del server e, per tick, arena e rete, i valori misurati il 4–5 ottobre 2026.

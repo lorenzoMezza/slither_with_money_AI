@@ -116,7 +116,7 @@ class SlitherVecEnv:
     """Molti mondi (lobby) in parallelo; `agents_per_env` agenti in ciascuno.
 
     Gli array hanno una riga per agente: N = num_envs · agents_per_env.
-    Ogni mondo randomizza i parametri incerti se ``randomize=True``.
+    Ogni mondo randomizza rete e tick se ``randomize=True`` (la fisica vera del server e' fissa).
     """
 
     def __init__(self, num_envs: int = 16, agents_per_env: int = 1, seed: int = 1, *,

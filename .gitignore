@@ -1,0 +1,51 @@
+# ---------------------------------------------------------------------------
+# Dati personali: MAI su GitHub
+# ---------------------------------------------------------------------------
+# Profilo Chrome con il login (Google, sessione del gioco).
+chrome-profile/
+# Partite registrate: nickname, saldi, giocatori, frame grezzi.
+analizer/sessioni/
+analizer/archivio/
+# Configurazioni e segreti locali.
+.env
+.env.*
+*.pem
+*.key
+
+# ---------------------------------------------------------------------------
+# Rigenerabili
+# ---------------------------------------------------------------------------
+# Estratto dell'analizzatore: `node analizer.js analizza`
+analizer/estratto/
+estratto/
+# Dipendenze Node: `npm install`
+node_modules/
+# Build Rust: `cargo build --release`
+target/
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+# Sessioni simulate scritte con `simulatore registra`
+sessione-simulata/
+
+# ---------------------------------------------------------------------------
+# Sistema ed editor
+# ---------------------------------------------------------------------------
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.idea/
+.vscode/
+*.log
+
+# addestramento: corse (pesi, registri) rigenerabili e pesanti
+allenamento/corse/
+# cloni dei giocatori umani (pesi ricavati dalle sessioni personali): restano sul disco
+allenamento/umani/
+# clone dei bot e sessioni simulate di avvio (rigenerabili, pesanti)
+allenamento/avvio/

@@ -4,6 +4,9 @@ Questo file basta da solo per rifare da capo, anche più in fretta, l'addestrame
 6 ottobre 2026. Quel giorno l'agente è partito da pesi casuali ed è arrivato ai 10
 modelli finali in `/workspace/finalissimallanemento` sul pod.
 
+Quei modelli sono stati addestrati con una fisica precedente: la ricetta va rifatta con
+la fisica vera del server (§1), che è quella del codice attuale.
+
 Contiene:
 
 - l'architettura (simulatore, osservazione, rete, PPO, lega, selezione);
@@ -55,47 +58,57 @@ Il ciclo, a ogni iterazione:
 **moneyslither.com** è uno slither.io a soldi:
 - si entra con una posta;
 - si guadagna mangiando il bottino d'oro di chi muore (le sue monete);
-- si esce col **cashout**: 3 s fermi, con il 10 % di commissione;
+- si esce col **cashout**: Q tenuto 3 s, poi si incassa il saldo meno il 10 % di
+  commissione;
 - chi muore perde tutto il saldo.
 
 Le unità di misura:
 - 1 «posta» è l'unità di tutti i conti;
-- si entra con una posta e taglia 100.
+- si entra con una posta, saldo 1 e taglia 100.
 
-Il simulatore (`simulatore/`, Rust) riproduce il server misurato dall'analizzatore
-(`analizer/`, registrazioni CDP del gioco vero). I fatti principali:
+Il simulatore (`simulatore/`, Rust) riproduce la fisica del server, data dall'utente il
+7 ottobre 2026 come certa. L'analizzatore (`analizer/`, registrazioni CDP del gioco
+vero) fornisce solo tick, arena, RTT e anelli per orb del bottino. I fatti principali:
 
 - 60 Hz. Uno snapshot ogni 1/2/3/4 tick (0,8/45,8/53,1/0,3 %), quindi ~24 decisioni
   al secondo.
 - Movimento:
-  - sterzata 0,135 rad/tick;
-  - passo 4,8 + 5,7·boostAmount, rampa del boost 0,075/tick;
-  - costo del boost (0,1425 + 0,00039·taglia)·boostAmount di taglia per tick;
-  - anelli ogni 6,4.
-- 86 orb di cibo dentro il muro.
+  - sterzata 0,135 rad/tick (8,1 rad/s), costante;
+  - passo 4,8 + 5,7·boostAmount (288 → 630 u/s), rampa del boost 0,075/tick in
+    salita e in discesa;
+  - boost solo con taglia > 40.
+- Corpo: anelli ogni 6,4 u, al massimo 1200.
+- Taglia:
+  - minimo 40; tetto max(100, floor(saldo/posta·300)), applicato a ogni tick (saldo 1
+    → tetto 300); la crescita oltre il tetto va persa;
+  - il boost costa il 10,8 % della taglia al secondo (taglia·0,108/60 per tick),
+    pagato mentre è premuto, anche in rampa, non moltiplicato per boostAmount.
+- Cibo: 86 orb in totale, bottino compreso; si rabbocca solo sotto 86, con nascite
+  uniformi entro 0,95·R.
   - Si raccoglie entro spessore + 29 (l'oro entro + 42).
-  - Un orb di cibo fa crescere di 6,03·(taglia/100)^0,151, cioè 6–7.
+  - Un orb normale fa crescere di 3·(taglia/100)^0,6: 3 a taglia 100, ~5,8 a 300.
+  - Un orb d'oro dà +12 di taglia e aggiunge il suo valore al saldo.
 - L'arena ha raggio 2000 + 100·(vivi − 1).
 - Bottino: alla morte, ceil(anelli/4) orb d'oro che valgono in tutto il 100 % del
-  saldo. Il muro conta come una collisione. Testa contro testa vince il più grande.
-- Cashout: 3000 ms tenuti, velocità 4,8·(1 − 0,935·t^2,44), direzione bloccata.
+  saldo. **Non sparisce mai.** Il muro conta come una collisione. Testa contro testa
+  muore il più piccolo.
+- Cashout: 3000 ms tenuti (il server controlla ogni 30 ms); direzione bloccata, boost
+  spento, velocità 4,8·(1 − 0,6·t^2,6), fino al 40 %; rilasciare prima azzera la
+  carica.
 - Fedeltà: `simulatore valida` dà l'85 % dei passi esatti e il 99,1 % entro 1 u.
 
-**Condizioni d'addestramento** (diverse dal simulatore di riferimento, per scelta
-dell'utente):
+**Fisica fissa, rete variabile.** La fisica qui sopra è fissa e uguale ovunque:
+addestramento, finale, `guarda.py`, `valuta.py` e `sfida.py`. `env.crescita_oro`
+(→ `gold_gain`) vale 12, come il server. Per lobby si randomizzano solo rete e tick
+(`Randomization` in `config.rs`):
 
-| grandezza | server / riferimento | addestramento | parametro |
-|---|---|---|---|
-| taglia da un orb d'oro | 23 | **11,5** | `env.crescita_oro` (→ `gold_gain`) |
-| bottino non raccolto sparisce dopo | 5–7 s (regola indicata, mai misurata) | **30–60 s** | `env.durata_bottino_s` (→ `loot_lifetime_ms`) |
-| rete: andata | 17,6 ms (RTT 35) | 12–35 ms per partita | `Randomization` in `config.rs` |
-| jitter | p95 5 ms | 2–10 ms | |
-| singhiozzi (40–250 ms) | non misurabili | 0–1 % dei messaggi | |
-| tempo di decisione dell'agente | — | 5–25 ms | |
-| tick | 59,94–60,01 Hz | 59,85–60,15 Hz | |
-
-`guarda.py`, `valuta.py` e `sfida.py` girano sul simulatore di riferimento (oro 23,
-bottino 5–7 s). La finale (`finale.py`) gira nelle condizioni d'addestramento.
+| grandezza | server misurato | addestramento |
+|---|---|---|
+| rete: andata | 17,6 ms (RTT 35) | 12–35 ms per partita |
+| jitter | p95 5 ms | 2–10 ms |
+| singhiozzi (40–250 ms) | non misurabili | 0–1 % dei messaggi |
+| tempo di decisione dell'agente | — | 5–25 ms |
+| tick | 59,94–60,01 Hz | 59,85–60,15 Hz |
 
 **Modalità partita** (`match_mode`), quella usata in addestramento:
 - La lobby è fissa: chi muore diventa spettatore.
@@ -123,11 +136,11 @@ bottino 5–7 s). La finale (`finale.py`) gira nelle condizioni d'addestramento.
 
 L'osservazione è egocentrica (x = dove guarda la testa). Si calcola **solo dallo
 snapshot che il client riceve**: lo stesso `Featurizer` gira sugli snapshot veri.
-Niente timer del bottino, niente orologio di partita.
+Niente orologio di partita (e il bottino non ha timer: non sparisce mai).
 
 | blocco | forma | contenuto |
 |---|---|---|
-| sé stesso | 40 | stato, velocità e sterzata con segno, budget e costo del boost, muro che si stringe, minacce più vicine, quanti sono più grandi, profitto se incassassi ora (x[38]), tempo minimo alla collisione, economia della lobby |
+| sé stesso | 40 | stato, velocità e sterzata con segno, secondi di boost rimasti (x[32] = ln(taglia/40)/0,108, ÷ 10), taglia rispetto al tetto (x[33] = taglia/tetto), muro che si stringe, minacce più vicine, quanti sono più grandi, profitto se incassassi ora (x[38] = (0,9·saldo − posta)/posta), tempo minimo alla collisione, economia della lobby |
 | cibo per settori | 16 × 2 | |
 | raggi | 32 × 4 | muro, corpi, teste più grandi, teste più piccole |
 | avversari | 8 × 36 | posizione attuale e prevista a 0,5 s (cinematica esatta del server), rotta, velocità, sterzata, taglia, saldo, minacce, e un **dossier** delle abitudini su ~20 s |
@@ -267,7 +280,7 @@ Soglie e nicchie le ha decise l'utente: non cambiarle da soli.
 | situazione | cosa succede | parametri |
 |---|---|---|
 | **attesa** | l'allievo entra da solo, senza bot; un avversario neurale entra dopo un po' alla taglia d'ingresso | `env.p_attesa`, `env.attesa_s` |
-| **svantaggio** | l'allievo entra piccolo (taglia 45–60, boost quasi finito) e trova un avversario neurale già a 300–600 (saldo normale) | `env.p_svantaggio`, `env.taglia_piccolo`, `env.taglia_grosso` |
+| **svantaggio** | l'allievo entra piccolo (taglia 45–60, boost quasi finito) e trova un avversario neurale già a 200–300 (saldo 1, entro il tetto di 300) | `env.p_svantaggio`, `env.taglia_piccolo`, `env.taglia_grosso` |
 | **duello** | l'allievo contro UN avversario neurale, senza bot, per 200–320 s | `env.p_duello`, `env.duello_s` |
 
 Le misure di ogni situazione finiscono nel registro: `ep_*_attesa`, `ep_*_svantaggio`,
@@ -336,7 +349,9 @@ regola della lobby vuota (7,0 già da +21 %) è sua e resta così.
 ### Come si leggono le regole (interpretazioni fissate il 6 ottobre)
 
 - **Profitto**: incassato − saldo d'ingresso, in poste. Nell'osservazione c'è il
-  profitto se si incassasse adesso, P = 0,9·saldo − posta, in x[38].
+  profitto se si incassasse adesso, P = (0,9·saldo − posta)/posta, in x[38].
+  Con la commissione del 10 %, +80 % vuol dire saldo 2,0 al cashout e +20 % saldo
+  1,333.
 - **«Oro a terra»**: solo gli orb d'oro **dentro il muro**. Quelli oltre il muro non si
   possono prendere. Basta un solo orb per passare da 5,0 a 2,6. L'agente vede l'oro a
   terra in x[25] (valore) e x[26] (numero di orb).
@@ -387,13 +402,14 @@ Rispetto a com'è andata davvero, il piano ideale:
 - **salta le deviazioni scartate** (il bot fuggitivo e il valore della taglia).
 
 I default del codice (`allenamento/ia/config.py`) sono già quelli finali:
-- crescita dall'oro 11,5;
-- bottino 30–60 s;
+- la fisica vera del server (§1): oro +12, bottino che non sparisce mai, tetto della
+  taglia;
 - frontale −0,5 e uccisione frontale al 75 %;
 - cibo 0,02;
 - penalità sotto +20 %;
 - rete del server ristretta;
-- attesa e svantaggio al 10 %.
+- attesa e svantaggio al 10 %, con l'avversario grosso a 200–300 (`env.taglia_grosso`);
+- partenze «ricche» con la taglia entro il tetto del loro saldo.
 
 Da tenere presente:
 - **Tutto si misura in campioni**, non in iterazioni o ore. I campioni sono la colonna
@@ -479,8 +495,8 @@ fitness ancora in salita (+1,87).
 **Segnale da guardare**: fra 2100 e 2600 iterazioni (~170–210 M campioni) è nata
 l'abitudine del **boost sempre acceso**. Il boost è passato dal 13 al 63–72 % del tempo
 e la taglia è scesa da 300 a ~70.
-- Nello stesso intervallo erano entrate la crescita dall'oro dimezzata e il bottino a
-  30–60 s; la causa precisa non è nota.
+- Nello stesso intervallo erano cambiate le regole di oro e bottino della fisica
+  precedente; la causa precisa non è nota.
 - L'abitudine è rimasta per tutta la fase 2 (boost 62–77 %, taglia ~90).
 - Solo l'affinamento l'ha ridotta.
 
@@ -740,9 +756,10 @@ Cosa non cambiare scalando:
   il più piccolo. L'uccisione vinta di frontale vale il 75 % di una vera, su scelta
   dell'utente.
 - **Cibo da 0,01 a 0,02** in fase 1: chiesto dall'utente.
-- **Crescita dall'oro dimezzata (11,5) e bottino a 30–60 s**: scelte dell'utente, il
-  valore in soldi non cambia.
-  - In un tempo vicino è nata l'abitudine del boost sempre acceso (§4, tappa 1).
+- **Oro e bottino**: l'addestramento usa la fisica vera del server (oro +12 di taglia,
+  bottino che non sparisce mai). Nella corsa del 6 ottobre, con la fisica precedente,
+  le regole di oro e bottino sono cambiate verso l'iterazione 2266, e in un tempo vicino
+  è nata l'abitudine del boost sempre acceso (§4, tappa 1).
 - **Uscite senza premio**: in «attesa», da solo, l'agente usciva subito, perché uscire
   senza premio costava 0. Con −5 sotto +20 % sono scese dall'~1 % allo 0,1 % in poche
   iterazioni.
@@ -753,8 +770,9 @@ Cosa non cambiare scalando:
   67e20a3) e corsa riportata ad allievo@4460. **Non riproporli.**
 - **Cibo raddoppiato nell'affinamento**: dopo ~350 iterazioni il cibo mangiato non è
   salito. Il boost invece è diventato più dosato e i duelli sono migliorati.
-  - Con la fisica misurata un orb di cibo vale ~0,5 s di boost (6–7 di taglia contro
-    11–16 al secondo di costo).
+  - Con la fisica vera un orb di cibo vale ~0,2–0,3 s di boost: a taglia 100 dà 3 di
+    taglia contro 10,8 al secondo di costo (~0,28 s); a 300 dà ~5,8 contro 32,4
+    (~0,18 s).
   - Mangiare conta soprattutto prima dello scontro.
 
 ### Avversari, popolazione, selezione
@@ -790,8 +808,8 @@ Cosa non cambiare scalando:
 - **Kernel Jupyter del pod**: un comando lungo o un processo non staccato lo blocca.
   Lanciare sempre con `setsid nohup … < /dev/null &`; se si blocca, cancellarlo
   dall'API.
-- **Strumenti di visione** (`guarda`, `sfida`, `valuta`): usano oro 23 e bottino
-  5–7 s, non le condizioni d'addestramento. La finale usa quelle d'addestramento.
+- **Strumenti di visione** (`guarda`, `sfida`, `valuta`) e finale usano la stessa
+  fisica dell'addestramento, quella vera del server.
 - **Coerenza dei punti**: ogni volta che si tocca la ricompensa, verificare che la
   somma per passo sia uguale a `punti_resoconto` del resoconto, su qualche migliaio di
   agenti (`allena.py --piccola` più un controllo come quello del 6 ottobre).
@@ -831,8 +849,8 @@ Cosa guardare:
 | 17:46 | 1143 | 93 M | rete del server ristretta ai valori misurati | 016506e |
 | 18:06 | 1631 | 132 M | penalità frontale −0,5, cibo 0,01 → 0,02 | 217a271 |
 | 18:24 | 2022 | 166 M | 448 lobby | |
-| 18:34 | 2266 | 185 M | crescita dall'oro 23 → 11,5 | 75ec348 |
-| 18:40 | 2397 | 195 M | bottino 30–60 s | 5406121 |
+| 18:34 | 2266 | 185 M | crescita dall'oro cambiata (fisica precedente) | 75ec348 |
+| 18:40 | 2397 | 195 M | durata del bottino cambiata (fisica precedente) | 5406121 |
 | 18:55 | 2790 | 223 M | uccisione frontale al 75 % | 3f3c7fa |
 | 19:08 | 3141 | 249 M | **passaggio alla fase 2** (fitness +1,87), 352 lobby | |
 | 19:52–19:59 | 4497–4637 | 326–334 M | bot fuggitivo e valore della taglia: rifiutati, annullati, ripristino di allievo@4460 | f58fe44, 67e20a3 |

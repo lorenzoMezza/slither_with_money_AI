@@ -883,15 +883,14 @@ mod tests {
     /// Lobby affollate di serpenti grandi: chi entra puo' nascere sopra un corpo e morire
     /// subito. La partita va rifatta, non aspettata per sempre (era un blocco infinito).
     #[test]
-    #[ignore = "da riadattare alla fisica vera del 2026-10-07 (tetto della taglia, controllo del cashout a 30 ms)"]
     fn morte_all_ingresso_rifa_la_partita() {
         let cfg = EnvConfig { agents_per_env: 4, match_mode: true, ..EnvConfig::default() };
         let mut env = Env::new(cfg, 7);
         let mut obs = vec![0.0f32; 4 * OBS_SIZE];
         let mut info = vec![0.0f32; 4 * INFO_SIZE];
-        // Taglia 900: serve saldo 3 (tetto della taglia = saldo·300).
-        let big = SlotSpec { start_size: 900.0, start_balance: 3.0, ..SlotSpec::default() };
-        let bot = BotSpec { style: "ariete".into(), skill: 1.0, start_size: 900.0, start_balance: 3.0, ..BotSpec::default() };
+        // Taglia 2400: serve saldo 8 (tetto della taglia = saldo·300).
+        let big = SlotSpec { start_size: 2400.0, start_balance: 8.0, ..SlotSpec::default() };
+        let bot = BotSpec { style: "ariete".into(), skill: 1.0, start_size: 2400.0, start_balance: 8.0, ..BotSpec::default() };
         let spec = MatchSpec { agents: vec![big; 4], bots: vec![bot; 3], max_s: 60.0, end_when_alone_s: 10.0, ..MatchSpec::default() };
         let mut rifatte = 0;
         for _ in 0..400 {
@@ -925,9 +924,9 @@ mod tests {
         }
         assert_eq!(done[0], 1, "la partita deve finire");
         assert_eq!(info[0], 4.0, "motivo: cashout forzato di fine partita");
-        assert!((info[3] - 2.0).abs() < 1e-6, "pagato l'80 % di 2,5 (commissione 20 %): {}", info[3]);
+        assert!((info[3] - 2.25).abs() < 1e-6, "pagato il 90 % di 2,5 (commissione 10 %): {}", info[3]);
         assert!(total.abs() < 1e-6, "l'equity e' gia' al netto della commissione: incassare vale 0, non {total}");
-        assert!((info[8] + 0.5).abs() < 1e-6, "profitto dell'episodio = −0,5 poste: {}", info[8]);
+        assert!((info[8] + 0.25).abs() < 1e-6, "profitto dell'episodio = 2,25 − 2,5 = −0,25 poste: {}", info[8]);
         assert_eq!(info[12], 1.0, "fine partita segnalata");
         let report = env.match_report();
         assert_eq!(report[0]["forzato"], true);
@@ -944,15 +943,14 @@ mod tests {
             if done[0] != 0 { break; }
         }
         assert_eq!(info[0], 4.0);
-        assert!((info[3] - 2.5 * 0.7 * 0.8).abs() < 1e-5, "pagato il 70 % del valore d'incasso: {}", info[3]);
-        assert!((total + 2.0 * 0.3).abs() < 1e-5, "aspettare la fine costa il 30 % del valore d'incasso: {total}");
+        assert!((info[3] - 2.5 * 0.7 * 0.9).abs() < 1e-5, "pagato il 70 % del valore d'incasso: {}", info[3]);
+        assert!((total + 2.25 * 0.3).abs() < 1e-5, "aspettare la fine costa il 30 % del valore d'incasso: {total}");
     }
 
     /// Situazioni costruite a mano: posizioni, corpo avvolto, bottino a terra, muro
     /// largo, bot che sta gia' incassando. E se le posizioni sono impossibili (due teste
     /// nello stesso punto) si ripiega sulle nascite casuali invece di bloccarsi.
     #[test]
-    #[ignore = "da riadattare alla fisica vera del 2026-10-07 (tetto della taglia, controllo del cashout a 30 ms)"]
     fn situazioni_con_posizioni_esplicite() {
         use crate::config::Placement;
         let cfg = EnvConfig { agents_per_env: 1, match_mode: true, ..EnvConfig::default() };
@@ -977,7 +975,7 @@ mod tests {
         assert!(dists.iter().all(|d| (d - r).abs() < 25.0), "corpo ad arco attorno all'agente: {:?}", &dists[..5]);
         assert!(w.foods.iter().filter(|f| f.gold).map(|f| f.value).sum::<f64>() > 0.99, "bottino a terra");
         assert!(w.r > 2400.0, "muro largo che si stringera': {}", w.r);
-        let prey = w.players.iter().find(|p| p.balance > 1.5 && matches!(p.kind, Kind::Bot(_))).unwrap();
+        let prey = w.players.iter().find(|p| p.balance > 1.5 && p.snake.size < 800.0 && matches!(p.kind, Kind::Bot(_))).unwrap();
         assert!(prey.cashing_out, "la preda sta incassando");
 
         // Un bot immortale messo fuori dal muro non muore, e il riscaldamento fa passare il tempo.
@@ -1042,8 +1040,9 @@ mod tests {
         for m in 0..120 {
             let st = styles[m % styles.len()];
             // Una partita su due con un forte e un classico gia' grandi e ricchi, come in una
-            // lobby avviata: cosi' si misurano anche le tattiche dei lunghi (accerchiamento).
-            let (size, bal) = if m % 2 == 0 { (300.0 + (m % 7) as f64 * 100.0, 2.0) } else { (0.0, 0.0) };
+            // lobby avviata (saldo = taglia/300: il tetto della taglia lo consente): cosi' si
+            // misurano anche le tattiche dei lunghi (accerchiamento).
+            let (size, bal) = if m % 2 == 0 { let t = 300.0 + (m % 7) as f64 * 100.0; (t, t / 300.0) } else { (0.0, 0.0) };
             let b = |c: bool, rich: bool| BotSpec { style: st.into(), skill: 1.0, classico: c,
                 start_size: if rich { size } else { 0.0 }, start_balance: if rich { bal } else { 0.0 }, ..BotSpec::default() };
             let spec = MatchSpec { agents: vec![], bots: vec![b(false, true), b(false, false), b(true, true), b(true, false)], max_s: 120.0, end_when_alone_s: 30.0, ..MatchSpec::default() };

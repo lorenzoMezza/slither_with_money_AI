@@ -10,7 +10,7 @@ Contesto per riprendere il lavoro in una nuova sessione. Aggiornato al 2026-10-0
 
 Un'AI che gioca a **moneyslither.com**: uno slither.io in cui si entra con una posta in
 denaro, si guadagna mangiando il bottino d'oro di chi muore e si esce col cashout
-(3 s, commissione 20 %). Morire vuol dire perdere tutto il saldo.
+(3 s, commissione 10 %). Morire vuol dire perdere tutto il saldo.
 
 Tre tappe, tre cartelle: osservare il gioco vero (`analizer/`), riprodurlo fedelmente
 (`simulatore/`), addestrarci l'AI (`allenamento/`).
@@ -37,8 +37,8 @@ stesso. Deve battere chiunque.
   lavoro è su `main`.
 - **Backup del vecchio progetto** in `~/Desktop/slither_with_money_AI_backup_20261004/`:
   non cancellarlo.
-- **Osservazione = solo ciò che il client vede online.** Niente timer del bottino (la
-  scadenza 5–7 s esiste solo nel simulatore), niente orologio di partita (`x[24]` = 0:
+- **Osservazione = solo ciò che il client vede online.** Niente timer del bottino (il
+  bottino non scade mai), niente orologio di partita (`x[24]` = 0:
   la fine della partita in addestramento non va prevista). Ogni sensore nuovo deve
   essere calcolabile dallo snapshot.
 - **La ricetta è `PIANO_ADDESTRAMENTO.md`** (radice): architettura, ricompensa a punti
@@ -108,26 +108,41 @@ svgsvg
 `--imposta sezione.chiave=valore` cambia qualunque parametro; ogni corsa salva la
 propria `config.json` e la ricarica quando riparte.
 
-## Fisica del server: VERITÀ data dall'utente il 2026-10-07 (simulatore/src/[config.rs](https://config.rs/), campi [V])
+## Fisica del server: VERITÀ data dall'utente il 2026-10-07 (`simulatore/src/config.rs`, campi [V])
 
-Fissa: non si randomizza e l'estratto dell'analizzatore non la sovrascrive.
+Verità assoluta: nel simulatore è fissa, non si randomizza (si randomizzano solo rete e
+tick) e l'estratto dell'analizzatore non la sovrascrive. Ogni file del repository la deve
+rispecchiare; le regole che sostituisce non vanno più menzionate.
 
-- Movimento: sterzata 0,135 rad/tick; passo 4,8 + 5,7·boostAmount; rampa 0,075/tick; boost solo con taglia > 40.
-- Corpo: percorso ogni 1,6 u, anello = punto 4·i (6,4 u), al massimo 1200 anelli; anelli e spessore come prima.
-- Taglia: nascita 100, minimo 40, **tetto max(100, floor(saldo/posta·300))** a ogni tick; boost costa
-  **10,8 % della taglia al secondo** mentre è premuto (non × boostAmount); cibo **3·(taglia/100)^0,6**;
-  oro **+12**; coda di crescita ≤ 15 + 0,03·taglia per tick.
-- Cibo: **86 orb in campo contando il bottino**, rabbocco solo sotto 86, nascono entro 0,95·R, fuori dal muro
-  vengono tolti; raccolta spessore + 29 (oro + 42); **il bottino non scade mai**.
-- Collisioni: testa 1,1995·spessore, corpo 1,0165; frontale ≤ (testaA + testaB)·1,07 con entrambi entro 75°,
-  muore il più piccolo (anche con `biggest_wins`); testa-corpo anelli 2..min(anelli,1200)−1; muro dist + 0,95·spessore > R.
-- Cashout: 3000 ms; il server controlla ogni 30 ms; passo 4,8·(1 − 0,6·t^2,6) (fino al 40 %), boost spento;
-  **commissione 20 %**.
-- Non coperti dalla verità (misurati il 4–5 ottobre): 60 Hz, snapshot, RTT 35 ms, arena 2000 + 100·(vivi − 1),
-  bottino ceil(anelli/passo) orb = 100 % del saldo. Rete randomizzata in addestramento come prima.
+- **Movimento**: sterzata 8,1 rad/s = 0,135 rad/tick verso targetAngle; passo 4,8 + 5,7·boostAmount
+  (288 u/s base, 630 u/s in boost); rampa 0,075/tick in salita e in discesa; boost solo con taglia > 40;
+  raggio di curvatura 35,6 u (77,8 u in boost).
+- **Corpo**: percorso ogni 1,6 u; anello i = punto 4·i (6,4 u), al massimo 1200 anelli; buffer
+  max(800, anelli·4 + 200) punti, pre-riempito all'indietro alla nascita. Anelli: fino a taglia 100
+  8 + (taglia − 40)·18/60, oltre 26 + (taglia − 100)·0,08, arrotondati, minimo 8. Spessore
+  (7,5 + 0,55·√n + [n > 26]·0,17·(n − 26)^0,7)·1,43, minimo 10, uguale lungo tutto il corpo.
+- **Taglia**: nascita 100 (saldo 1, posta 1), minimo 40, **tetto max(100, floor(saldo/posta·300))**
+  a ogni tick. Boost: **10,8 % della taglia al secondo** (taglia·0,108/60 per tick) mentre è premuto,
+  anche sulla rampa, non × boostAmount; sotto 40 si spegne. Cibo **3·(taglia/100)^0,6**, oro **+12**;
+  coda di crescita ≤ 15 + 0,03·taglia per tick, sempre entro il tetto (la crescita oltre il tetto va persa).
+- **Cibo**: **86 orb in campo contando il bottino**, rabbocco a ogni tick solo sotto 86; nascono
+  uniformi entro 0,95·R; gli orb fuori dal muro vengono tolti; raccolta spessore + 29 (oro spessore + 42),
+  l'oro aggiunge il suo valore al saldo; **il bottino non scade mai**.
+- **Collisioni**: testa spessore·1,1995, corpo spessore·1,0165. Frontale (controllato per primo) se
+  distanza ≤ (testa A + testa B)·1,07 e ciascuno punta verso l'altro entro 75° (cos > 0,2588): muore
+  il più piccolo, a parità il caso (`smallest_wins` e `biggest_wins` fanno la stessa cosa). Altrimenti
+  testa-corpo sugli anelli 2..min(anelli,1200)−1, senza arco frontale, mai col proprio corpo. Muro:
+  distanza dal centro + 0,95·spessore > R.
+- **Cashout**: tasto tenuto 3000 ms d'orologio del client; il server lo controlla ogni 30 ms; in carica
+  direzione bloccata, boost spento, passo 4,8·(1 − 0,6·t^2,6) (fino al 40 %); rilascio prima dei 3 s =
+  carica azzerata; a 3 s si incassa il saldo meno il **10 % di commissione**. Profitto +80 % ⇔ saldo 2,0
+  all'uscita, +20 % ⇔ saldo 1,333.
+- Non coperti dalla verità (misurati il 4–5 ottobre): 60 Hz, snapshot, RTT 35 ms, arena
+  2000 + 100·(vivi − 1), bottino ceil(anelli/passo) orb = 100 % del saldo.
+- Addestramento: `env.crescita_oro` = 12 come il server (guarda, sfida, valuta, addestramento e finale
+  usano la stessa fisica); `env.taglia_grosso` (200, 300) e partenze «ricche» entro il tetto del saldo.
 
-I modelli addestrati il 6 ottobre usavano la fisica vecchia: vanno riaddestrati. Due test di [env.rs](https://env.rs/) sono
-in `ignore` da riadattare (tetto della taglia, controllo del cashout a 30 ms).
+I modelli addestrati il 6 ottobre usavano una fisica precedente: vanno riaddestrati con questa.
 
 ## Addestramento: com'è fatto (dettaglio e motivazioni in `allenamento/README.md`)
 
@@ -369,8 +384,6 @@ Prima di una prova reale, verificare sempre che il modello `.pt`, il `Featurizer
   - tolto `allenamento/FASI.md`, confluito nel piano;
   - aggiunti `finale.py`, `medie.py`, `runpod/riavvia.sh`.
 - Le corse con la ricompensa vecchia ([stato.pt](https://stato.pt/) formato 2) non si riprendono.
-- Se l'agente imparasse la scadenza del bottino (la GRU può contare), variarla o
-  spegnerla in parte delle partite: da concordare con l'utente.
 
 text
 

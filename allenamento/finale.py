@@ -4,7 +4,7 @@ Ogni candidato gioca le STESSE partite (PIANO_ADDESTRAMENTO.md, tappa 4):
   banco   `--per-stile` partite per stile (11 stili) da solo contro 2 bot al massimo livello
   torneo  `--giri` sorteggi in gironi da 4 candidati + 1 bot misto, 16 partite per girone
 Punteggio = ½ punti medi contro i bot + ½ punti medi nel torneo (punti della fase 2 con la
-ricompensa ufficiale, cibo 0,02), nelle condizioni dell'addestramento (oro 11,5, bottino 30–60 s).
+ricompensa ufficiale, cibo 0,02), nelle condizioni dell'addestramento (oro +12, bottino che non scade).
 
     python3 finale.py --corsa corse/affinamento --da 500 \\
         --extra corse/runpod/lega/allievo_7160.pt corse/runpod/migliore.pt \\

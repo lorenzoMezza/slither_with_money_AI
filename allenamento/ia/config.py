@@ -19,7 +19,7 @@ class EnvCfg:
     posti: int = 4                   # agenti neurali per lobby (fase 1: 3–4 in campo; fase 2: 1–5)
     mondi_valutazione: int = 16      # di cui riservate al banco di prova (nessun dato di addestramento)
     mondi_torneo: int = 16           # ...e ai gironi del torneo fra checkpoint (nessun dato di addestramento)
-    randomizza: bool = True          # parametri incerti del server randomizzati per lobby
+    randomizza: bool = True          # rete e tick randomizzati per lobby (la fisica vera del server e' fissa)
     copie: tuple = (2, 3)            # avversari neurali dell'allievo (minimo, massimo)
     bot_n: tuple = (1, 2)            # bot per lobby (minimo, massimo), stili scelti dalla lega
     bot_abilita: tuple = (1.0, 1.0)  # abilita' dei bot: al massimo
@@ -29,7 +29,7 @@ class EnvCfg:
     attesa_s: tuple = (10.0, 60.0)   # dopo tanti secondi: chi ha mangiato nel frattempo e' piu' grosso
     p_svantaggio: float = 0.1        # l'allievo entra piccolo (taglia_piccolo, boost quasi finito) in una lobby
     taglia_piccolo: tuple = (45.0, 60.0)    # dove un avversario neurale e' gia' grosso perche' ha mangiato
-    taglia_grosso: tuple = (300.0, 600.0)   # (taglia_grosso, saldo normale: e' cibo, non soldi)
+    taglia_grosso: tuple = (200.0, 300.0)   # saldo normale (1): il tetto della taglia e' 300, e' cibo, non soldi
     p_duello: float = 0.0            # duello lungo (affinamento, 2026-10-06): l'allievo contro UN avversario
     duello_s: tuple = (200.0, 320.0)  # neurale, senza bot, per tanti secondi: negli inseguimenti il boost
                                      # finisce, e ne ha di piu' chi e' piu' grosso (chi ha mangiato)

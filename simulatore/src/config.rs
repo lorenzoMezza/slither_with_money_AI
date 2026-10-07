@@ -137,7 +137,7 @@ pub struct Params {
     /// direzione bloccata sull'ultima mira, boost spento.
     pub cashout_slow_m: f64,
     pub cashout_slow_p: f64,
-    /// [V] commissione trattenuta al cashout: 20 % del saldo.
+    /// [V] commissione trattenuta al cashout: 10 % del saldo.
     pub rake: f64,
     /// [M] il client manda {"t":"cashout"} dopo questi ms di tasto tenuto.
     pub cashout_client_hold_ms: f64,
@@ -214,7 +214,7 @@ impl Default for Params {
             cashout_accept_tolerance_ms: 100.0,
             cashout_slow_m: 0.6,
             cashout_slow_p: 2.6,
-            rake: 0.20,
+            rake: 0.10,
             cashout_client_hold_ms: 3000.0,
             snapshot_joint: vec![
                 [2.0, 1.0, 8.0], [2.0, 2.0, 449.0], [3.0, 2.0, 59.0], [2.0, 3.0, 2.0],

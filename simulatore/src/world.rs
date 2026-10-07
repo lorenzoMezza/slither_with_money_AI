@@ -838,9 +838,9 @@ mod tests {
         assert_eq!(World::size_cap(&w.p, 0.2, 1.0), 100.0, "mai sotto 100");
     }
 
-    /// Cashout: la carica parte al controllo dei 30 ms, rallenta fino al 40 % e trattiene il 20 %.
+    /// Cashout: la carica parte al controllo dei 30 ms, rallenta fino al 40 % e trattiene il 10 %.
     #[test]
-    fn cashout_trattiene_il_venti_per_cento() {
+    fn cashout_trattiene_il_dieci_per_cento() {
         let mut w = world();
         let a = place(&mut w, "a", 0.0, 0.0, 0.0, 100.0);
         w.apply_input(a, 0.0, false, true);
@@ -855,6 +855,6 @@ mod tests {
         assert!((passo - 4.8 * 0.4).abs() < 1e-6, "a fine carica il passo e' il 40 %: {passo}");
         assert!(w.request_cashout(a));
         let pl = w.player(a).unwrap();
-        assert!((pl.payout - 0.8).abs() < 1e-12, "incasso 80 % del saldo: {}", pl.payout);
+        assert!((pl.payout - 0.9).abs() < 1e-12, "incasso 90 % del saldo: {}", pl.payout);
     }
 }

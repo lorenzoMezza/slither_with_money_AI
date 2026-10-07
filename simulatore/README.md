@@ -23,10 +23,11 @@ cargo build --release
 | `bench [--mondi 64]` | velocità di simulazione |
 | `parametri` | i parametri in uso |
 
-Tutti i comandi leggono i parametri misurati da `../analizer/estratto/simulatore.json`,
-se c'è (`--analizer FILE` per un altro estratto). Quando il server cambia: si
-rigioca con `analizer` acceso, `node analizer.js analizza`, e il simulatore si
-riallinea da solo.
+La fisica del server è la **verità data dall'utente il 2026-10-07** (tabella più
+sotto), scritta in `src/config.rs` (campi `[V]`): è fissa e nessun estratto la
+sovrascrive. Da `../analizer/estratto/simulatore.json`, se c'è (`--analizer FILE`
+per un altro estratto), si leggono solo le grandezze che la verità non copre:
+frequenza dei tick, arena, RTT, orb di bottino per anello.
 
 ## Da Python
 
@@ -64,7 +65,7 @@ viene applicato al primo tick utile. Il mondo avanza fino allo snapshot successi
 | se stesso | 40 valori: stato proprio, velocità e sterzata, budget e costo del boost, muro che sta per stringersi, minacce più vicine, economia della lobby |
 | raggi | 32 direzioni × (muro, corpo nemico, testa più grande, testa più piccola), fino a 1000 u |
 | avversari | gli 8 più vicini × 36 valori: posizione (anche prevista fra 0,5 s con la cinematica esatta del server: sterzata costante, poi passo; forma chiusa della somma dei 12 passi), rotta, velocità, sterzata, taglia, saldo, minacce reciproche, e il dossier delle abitudini su ~20 s (boost, mira verso di me, inseguimenti, guadagni, uccisioni, cashout finti, sterzate, vicinanza) |
-| oro | gli 8 più vicini × 5: presenza, posizione, distanza, valore (un bottino è un mucchio: la massa d'oro per zona è nella griglia e nella mappa). **Nessun timer di scadenza**: online non si conosce |
+| oro | gli 8 più vicini × 5: presenza, posizione, distanza, valore (un bottino è un mucchio: la massa d'oro per zona è nella griglia e nella mappa). **Nessun timer**: il bottino non scade mai |
 | cibo | 16 settori × (densità, distanza del più vicino) |
 | griglia | 6 canali × 32 × 32 celle da 20 u: corpi, teste, cibo, oro, fuori dal muro, il proprio corpo |
 | mappa | gli stessi 6 canali × 24 × 24 celle da 200 u: ±2400 u, praticamente tutta l'arena |
@@ -108,17 +109,39 @@ partita (`max_episode_s`).
 `info["fine_partita"]` segnala la fine, e `env.match_report(i)` dà il profitto di
 ogni partecipante, bot compresi.
 
-**Randomizzazione** (`randomize=True`). Varia per mondo solo ciò che è incerto o
-che il server ha già cambiato:
-- frequenza dei tick, costo del boost, guadagno per orb;
-- cibo in campo (il server è passato da 430 a 86 orb in un mese);
+**Randomizzazione** (`randomize=True`). La fisica del server è certa e non si
+randomizza. Varia per mondo solo ciò che dipende dalla connessione:
+- frequenza dei tick (59,85–60,15 Hz);
 - latenza (12–35 ms per verso), jitter (2–10 ms), singhiozzi di rete (0–1 % dei
   messaggi in ritardo di 40–250 ms) e tempo di calcolo dell'agente (5–25 ms): il
   server vero è stato misurato con una buona connessione, l'agente deve reggere
-  anche una linea peggiore;
-- scala delle hitbox (±3 %).
+  anche una linea peggiore.
 
-Ciò che è misurato esatto (passo, sterzata, rampa, corpo) resta esatto.
+## La fisica del server (verità, 2026-10-07)
+
+| fenomeno | regola |
+|---|---|
+| sterzata | 8,1 rad/s = 0,135 rad/tick, costante, verso la mira |
+| passo | 4,8 + 5,7·boostAmount u/tick (288 u/s base, 630 u/s in boost); raggio di curvatura 35,6 u (77,8 u in boost) |
+| rampa del boost | 0,075/tick in salita e in discesa; boost solo con taglia > 40 |
+| corpo | percorso ogni 1,6 u; anello i = punto 4·i (6,4 u); al massimo 1200 anelli; buffer max(800, anelli·4 + 200) |
+| anelli dalla taglia | fino a 100: 8 + (taglia − 40)·18/60; oltre: 26 + (taglia − 100)·0,08; arrotondati, minimo 8 |
+| spessore | (7,5 + 0,55·√n + [n > 26]·0,17·(n − 26)^0,7)·1,43, minimo 10, uguale lungo il corpo |
+| taglia | nascita 100 (saldo 1, posta 1), minimo 40, tetto max(100, floor(saldo/posta·300)) a ogni tick |
+| costo del boost | 10,8 % della taglia al secondo (taglia·0,108/60 per tick) mentre è premuto, anche sulla rampa, non × boostAmount; sotto 40 si spegne |
+| crescita | orb normale 3·(taglia/100)^0,6; orb d'oro +12; coda ≤ 15 + 0,03·taglia per tick, sempre entro il tetto |
+| cibo | 86 orb in campo, bottino compreso; rabbocco solo sotto 86; nascita uniforme entro 0,95·R; orb fuori dal muro tolti |
+| raccolta | spessore + 29 (oro: spessore + 42); l'oro aggiunge il suo valore al saldo |
+| bottino | non scade mai |
+| hitbox | testa spessore·1,1995, corpo spessore·1,0165 |
+| frontale | distanza ≤ (testa A + testa B)·1,07 ed entrambi puntati entro 75°: muore il più piccolo, a parità il caso (`smallest_wins` = `biggest_wins`) |
+| testa-corpo | anelli 2..min(anelli, 1200) − 1, senza arco frontale, mai col proprio corpo |
+| muro | si muore se distanza dal centro + 0,95·spessore > R |
+| cashout | 3000 ms d'orologio del client, controllato ogni 30 ms; direzione bloccata, boost spento, passo 4,8·(1 − 0,6·t^2,6) (fino al 40 %); rilascio = carica azzerata; si incassa il saldo meno il 10 % |
+
+Misurati il 4–5 ottobre (non coperti dalla verità): 60 Hz, snapshot ogni 1–4 tick,
+RTT 35 ms, arena 2000 + 100·(vivi − 1) con rilassamento 0,02, bottino ceil(anelli/4)
+orb che valgono il 100 % del saldo.
 
 ## Quanto è fedele
 
@@ -138,25 +161,8 @@ tuoi input reali con la latenza del modello di rete. Risultato sulle sessioni de
 
 **2. Il simulatore misurato come il server** (`registra` + `analizer` +
 `strumenti/confronta.mjs`). Una partita simulata viene scritta come sessione e
-misurata dallo **stesso** analizzatore che misura il server vero. Ecco i due
-estratti a confronto:
-
-| grandezza | server | simulatore |
-|---|---|---|
-| frequenza | 59,98 Hz | 59,95 Hz |
-| passo | 4,8 / 10,5 | 4,8 / 10,5 |
-| rampa del boost | 0,075 | 0,075 |
-| sterzata | 0,1351 | 0,1355 |
-| distanza fra anelli | 6,4 | 6,4 |
-| cibo dentro / fuori / totale | 86 / 83 / 169 | 86 / 80 / 171 |
-| raggio di raccolta (normale / oro) | 28,93 / 41,01 | 29,42 / 41,59 |
-| crescita per orb d'oro | 23 fissi | 23 fissi |
-| crescita per orb | 6,03·(t/100)^0,158 | 6,04·(t/100)^0,157 |
-| costo del boost | 0,1444 + 0,000386·t | 0,1441 + 0,000386·t |
-| arena | 2000 + 100·(n−1), rilassamento 0,02 | identico |
-| cashout | 3000 ms, curva 0,935·t^2,44 | 3000 ms, 0,934·t^2,43 |
-| commissione | 10 % | 10 % |
-| frequenza degli snapshot, tick per snapshot, jitter, RTT, input a 60 Hz | — | coincidono |
+misurata dallo **stesso** analizzatore che misura il server vero; i due estratti
+si confrontano grandezza per grandezza:
 
 ```bash
 ./target/release/simulatore registra --secondi 900 --cartella /tmp/sim/s1
@@ -173,14 +179,12 @@ i tick sono 60 al secondo, e il cashout dura 3000 ms d'orologio.
 
 | | |
 |---|---|
-| **misurato e riprodotto** | movimento, boost e costo, corpo, cibo e crescita, raccolta, arena, cashout, bottino (ceil(anelli/4), 100 % del saldo), commissione, tempi di rete |
-| **dal client, coerente con i dati** | soglie delle collisioni (i sopravvissuti più vicini passano a 1,02× la soglia, i morti dentro), ordine delle operazioni nel tick |
-| **regole indicate da te** | frontale: vince il più grande (a parità decide il caso); morire sul muro ha la stessa fine di una collisione (stesso bottino); il bottino non raccolto sparisce dopo 5–7 s. Verificate da `cargo test` |
-| **dal client, mai osservato** | cono del frontale (75°), soglia del muro (0,95·spessore), limite della coda di crescita (15 + 0,03·taglia per tick) |
+| **verità del server (data dall'utente)** | movimento, corpo, taglia e tetto, costo del boost, crescita, cibo, raccolta, bottino che non scade, collisioni, muro, cashout e commissione del 10 %. Verificati da `cargo test` |
+| **misurato e riprodotto** | frequenza dei tick, snapshot, arena, bottino (ceil(anelli/4) orb, 100 % del saldo), tempi di rete |
 | **stimato** | posizione di nascita (0,35–0,72 del raggio, direzione casuale), tolleranza del server sul messaggio di cashout |
 | **comportamento** | gli avversari sono bot calibrati sulle sessioni vere: lobby con 0–2 avversari vivi (default, `lobby.bots_max` per allenarsi a lobby piene), boost acceso il 33 % del tempo come i giocatori veri, morti che diventano spettatori, chi incassa che resta in lista con `cashingOut: true`, percezione in ritardo come un umano (rete + 45 ms di buffer), riflessi 110–270 ms, tattiche, partite di 40–240 s. Restano i meno verificabili: crescono un po' piu' dei giocatori veri (taglia mediana ~180 contro 118, su un campione reale di soli 3 avversari) |
 
-Ogni costante sta in `src/config.rs` con la sua fonte (`[M]`, `[S]`, `[P]`).
+Ogni costante sta in `src/config.rs` con la sua fonte (`[V]` verità, `[M]`, `[S]`, `[P]`).
 Il resoconto completo del gioco è in `../analizer/RESOCONTO-GIOCO.md`.
 
 ## Struttura

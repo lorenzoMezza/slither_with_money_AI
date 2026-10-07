@@ -16,8 +16,8 @@
 //!               me, inseguimenti, guadagni, uccisioni, cashout finti, sterzate, vicinanza).
 //!               E' memoria a lungo termine calcolata dagli snapshot, quindi vale anche online:
 //!               la GRU non deve ricordarsi da sola chi ha fatto cosa mezzo minuto fa.
-//!   oro         8 entita' × 5: posizione, distanza, valore (nessun timer: online la
-//!               scadenza del bottino non si conosce)
+//!   oro         8 entita' × 5: posizione, distanza, valore (nessun timer: il bottino
+//!               non scade mai)
 //!   cibo        16 settori × 2: densita' e distanza del piu' vicino
 //!   griglia     6 canali × 32 × 32 celle da 20 u attorno alla testa: corpi, teste, cibo,
 //!               oro, fuori dal muro, il proprio corpo
@@ -199,8 +199,8 @@ impl Featurizer {
         x[35] = clamp(nearest_head / 1000.0, 0.0, 2.0);
         x[36] = clamp(nearest_body / 1000.0, 0.0, 2.0);
         x[37] = enemies.iter().filter(|e| e.size >= me.size).count() as f32 / 4.0;
-        // Quanto porterei a casa incassando adesso (commissione del 20 %), in profitto sulla posta.
-        x[38] = clamp((0.8 * me.balance - buy) / buy, -1.0, 10.0);
+        // Quanto porterei a casa incassando adesso (commissione del 10 %), in profitto sulla posta.
+        x[38] = clamp((0.9 * me.balance - buy) / buy, -1.0, 10.0);
         // Tempo minimo alla collisione con una testa (calcolato sotto, per entita').
         x[39] = 1.0;
 

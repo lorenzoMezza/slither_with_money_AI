@@ -49,9 +49,9 @@ L'addestramento è un processo separato:
 `--imposta sezione.chiave=valore` cambia qualunque parametro di `ia/config.py`. Ogni
 corsa salva la sua `config.json` e la ricarica quando riparte.
 
-`guarda`, `sfida` e `valuta` girano sul simulatore di riferimento: oro 23, bottino
-5–7 s. L'addestramento e la finale usano le condizioni d'addestramento: oro 11,5,
-bottino 30–60 s.
+`guarda`, `sfida`, `valuta`, l'addestramento e la finale usano tutti la stessa fisica,
+quella vera del server (`../CLAUDE_unico.md`, «Fisica del server»): oro +12, bottino che
+non scade mai, commissione del 10 %, taglia entro il tetto max(100, floor(saldo·300)).
 
 ## Il codice
 
@@ -88,8 +88,8 @@ bottino 30–60 s.
 
 ## Limiti onesti
 
-- Il simulatore riproduce le misure del server, non il server. Ogni differenza residua
-  è qualcosa che l'agente potrebbe imparare a sfruttare: per esempio la scadenza del
-  bottino, che la GRU può contare anche senza vederla.
+- Il simulatore riproduce la fisica del server data dall'utente e le misure del resto
+  (tick, arena, rete), non il server. Ogni differenza residua è qualcosa che l'agente
+  potrebbe imparare a sfruttare.
 - «Batte un professionista» va misurato contro persone. I bot e la lega sono
   l'approssimazione migliore disponibile in simulazione, non una prova.

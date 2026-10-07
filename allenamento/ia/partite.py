@@ -22,6 +22,7 @@ peggiore: un agente che batte tutti tranne uno stile non e' il migliore.
 """
 from __future__ import annotations
 
+import math
 import random
 from dataclasses import dataclass, field
 
@@ -50,7 +51,9 @@ def rich_start(rng: random.Random, p: float) -> dict:
     """Chi entra in una lobby avviata trova avversari gia' cresciuti: a volte si parte cosi'."""
     if rng.random() >= p:
         return {}
-    return {"start_size": round(rng.uniform(150, 900), 1), "start_balance": round(rng.uniform(1.3, 4.0), 3)}
+    # La taglia sta sotto il tetto del saldo, max(100, floor(saldo·300)) (verita' del server).
+    bal = rng.uniform(1.3, 4.0)
+    return {"start_size": round(rng.uniform(150, math.floor(bal * 300)), 1), "start_balance": round(bal, 3)}
 
 
 class Matchmaker:
