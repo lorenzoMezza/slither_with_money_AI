@@ -5,8 +5,11 @@ registra tutto ciò che passa — ogni frame WebSocket, ogni risposta HTTP, il
 sorgente di ogni script, lo stato del client — e ne ricava, man mano, le regole
 e la fisica del **server**: quelle che servono a costruire un simulatore fedele.
 
-Il risultato è una cartella, `estratto/`, da cui il simulatore si costruisce
-partendo da `simulatore.json`.
+Il risultato è una cartella, `estratto/`, con le misure e un `simulatore.json`.
+La fisica del simulatore però **non** viene da lì: è la verità del server, data
+dall'utente il 7 ottobre 2026 (riassunta in `RESOCONTO-GIOCO.md`), ed è fissa.
+Dall'estratto il simulatore prende solo tick, arena, RTT e anelli per orb del
+bottino (`from_analizer`).
 
 ## Uso
 
@@ -67,8 +70,10 @@ velocità è prima «unità per tick», i secondi arrivano dopo, con la frequenz
 **misurata**. Il numero di tick fra due snapshot si conta dallo SPOSTAMENTO, mai dal `ts`: il `ts` è l'ora d'invio dello snapshot, presa da un timer diverso da quello del tick, e arrotondarlo sbaglia il conteggio nel 7 % degli intervalli (è così che in passato erano venuti fuori «61,25 Hz»: sono 60,0).
 
 Dove misura e sorgente coesistono si confrontano, e ogni parametro di
-`simulatore.json` porta il verdetto: *confermato*, *smentito* (vale la misura),
-*solo sorgente* (da verificare).
+`simulatore.json` porta il verdetto: *confermato*, *smentito*, *solo sorgente*.
+Il verdetto è un controllo: un «smentito» su una grandezza di fisica non cambia
+il simulatore, ma segnala che va ricontrollata la misura o che il server è
+cambiato.
 
 ## Cosa viene misurato
 
@@ -77,17 +82,16 @@ Dove misura e sorgente coesistono si confrontano, e ogni parametro di
 | tempo e rete | frequenza vera del server, tick per snapshot, Hz degli snapshot e degli input, RTT, jitter, ritardo comando → server |
 | movimento | passo per tick base e in boost, linearità col boost, rampa del boost, sterzata massima (e se dipende da taglia o boost), legge di sterzata verificata sul proprio serpente |
 | corpo | distanza fra anelli, anelli in funzione della taglia, spessore in funzione degli anelli (confrontati con le funzioni del client eseguite) |
-| boost | costo per tick su tratti puliti, confronto fra legge costante, proporzionale e a due termini |
+| boost | costo per tick su tratti puliti, confrontato con più leggi (la vera è il 10,8 % della taglia al secondo, finché il boost è premuto) |
 | cibo | orb dentro e fuori dal muro, densità, distribuzione di nascita, raggio di raccolta (normale e oro), legge di crescita, accredito del valore |
 | arena | raggio in funzione dei serpenti vivi, ritmo di avvicinamento, soglia della morte sul muro |
-| vita ed economia | bottino alla morte (numero di orb, valore, massa), scadenza, nascite, poste, tetto di taglia, commissione del cashout, money rain |
+| vita ed economia | bottino alla morte (numero di orb, valore, massa), quanto resta a terra, nascite, poste, tetto di taglia, commissione del cashout, money rain |
 | combattimento | soglie delle hitbox inquadrate fra quasi-contatti dei sopravvissuti e uccisioni, regola del frontale |
 | cashout | durata in tick, curva di rallentamento, sterzo e boost durante, interruzione, sequenza dei messaggi |
 | protocollo | ogni messaggio, campo per campo, con presenza, intervalli, **precisione numerica** ed esempi |
 
-**Il server cambia.** Fra settembre e ottobre 2026 il cibo in campo e' sceso da
-430 a 86 orb e l'uccisore ha cominciato a incassare il 40 % del saldo della
-vittima. Mescolare sessioni di versioni diverse falsa le misure: quando le regole
+**Il server cambia.** Fra settembre e ottobre 2026 il cibo in campo è sceso da
+430 a 86 orb. Mescolare sessioni di versioni diverse falsa le misure: quando le regole
 cambiano, sposta le sessioni vecchie fuori da `sessioni/` (per esempio in
 `archivio/`), e l'estratto torna a descrivere solo il server attuale.
 
@@ -99,7 +103,7 @@ provocarlo.
 
 ```text
 analizer/
-├── estratto/                 ← L'USCITA: si parte da simulatore.json (vedi estratto/LEGGIMI.md)
+├── estratto/                 ← L'USCITA: misure e simulatore.json (vedi estratto/LEGGIMI.md)
 ├── sessioni/<id>/            i dati grezzi di ogni sessione
 │   ├── rete/frames.ndjson.gz     ogni frame WebSocket, in ordine
 │   ├── rete/http.ndjson, http/   ogni richiesta HTTP e il suo corpo
