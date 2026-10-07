@@ -1,0 +1,32 @@
+{
+  "manifest_version": 3,
+  "name": "Ponte IA per moneyslither",
+  "version": "2.0",
+  "description": "Collega la pagina del gioco al ponte locale (ponte.py): l'IA guida come un controller, il tasto X passa il controllo.",
+  "background": {
+    "service_worker": "sfondo.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://moneyslither.com/*",
+        "*://*.moneyslither.com/*"
+      ],
+      "js": [
+        "pagina.js"
+      ],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": [
+        "*://moneyslither.com/*",
+        "*://*.moneyslither.com/*"
+      ],
+      "js": [
+        "relay.js"
+      ],
+      "run_at": "document_start"
+    }
+  ]
+}

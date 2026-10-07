@@ -1,0 +1,4 @@
+{
+  "env": {"mondi": 512, "mondi_valutazione": 16, "mondi_torneo": 16},
+  "ppo": {"minibatch": 192}
+}

@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simulatore moneyslither</title>
+<style>
+  :root { --bg: #0b0f17; --grid: #141b28; --wall: #ff3b3b; --text: #e8edf5; --muted: #8a94a7; --panel: rgba(12,17,27,.82); --accent: #2ee66b; --gold: #ffd700; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font: 13px/1.35 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; overflow: hidden; }
+  canvas { display: block; width: 100vw; height: 100vh; cursor: crosshair; }
+  .panel { position: fixed; background: var(--panel); border: 1px solid #222b3b; border-radius: 10px; padding: 10px 12px; }
+  #hud { top: 12px; left: 12px; min-width: 210px; }
+  #board { top: 12px; right: 12px; min-width: 190px; }
+  #help { bottom: 12px; left: 12px; color: var(--muted); }
+  #feed { top: 180px; right: 12px; min-width: 190px; color: var(--muted); }
+  .big { font-size: 20px; font-weight: 700; }
+  .row { display: flex; justify-content: space-between; gap: 16px; }
+  .bar { height: 8px; background: #1b2333; border-radius: 4px; overflow: hidden; margin-top: 6px; }
+  .bar > i { display: block; height: 100%; width: 0; background: var(--accent); }
+  .muted { color: var(--muted); }
+  .me { color: var(--accent); font-weight: 700; }
+  h3 { margin: 0 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+  #status { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 18px; color: var(--muted); }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="status">in attesa del simulatore…</div>
+<div class="panel" id="hud">
+  <div class="row"><span class="muted">taglia</span><span class="big" id="size">–</span></div>
+  <div class="row"><span class="muted">saldo</span><span class="big" id="bal">–</span></div>
+  <div class="row"><span class="muted">boost</span><span id="boost">–</span></div>
+  <div class="row"><span class="muted">cashout</span><span id="cash">–</span></div>
+  <div class="bar"><i id="cashbar"></i></div>
+  <div class="row" style="margin-top:8px"><span class="muted">vivi · raggio</span><span id="arena">–</span></div>
+  <div class="row"><span class="muted">tick · snapshot</span><span id="rate">–</span></div>
+</div>
+<div class="panel" id="board"><h3>Saldo</h3><div id="lb"></div></div>
+<div class="panel" id="feed"><h3>Eventi</h3><div id="events"></div></div>
+<div class="panel" id="help">mouse: direzione · clic o spazio: boost · C tenuto 3 s: cashout · rotella o +/−: zoom · F: segui un altro</div>
+<script>
+'use strict';
+const cv = document.getElementById('c');
+const ctx = cv.getContext('2d');
+const $ = (id) => document.getElementById(id);
+let W = 0, H = 0, DPR = 1;
+function resize() { DPR = devicePixelRatio || 1; W = innerWidth; H = innerHeight; cv.width = W * DPR; cv.height = H * DPR; }
+addEventListener('resize', resize); resize();
+
+// --- buffer di snapshot e interpolazione (il client vero rende a now − 45 ms) ---
+const BUF_MS = 45;
+const snaps = [];
+let you = '', tickHz = 61.7, follow = '', zoom = 1, lastArrival = 0, arrivals = [];
+const events = [];
+let prevAlive = new Map();
+
+const es = new EventSource('/stream');
+es.onmessage = (e) => {
+  const m = JSON.parse(e.data);
+  you = m.you; tickHz = m.tickHz;
+  const s = m.state;
+  s._t = performance.now();
+  arrivals.push(s._t); if (arrivals.length > 40) arrivals.shift();
+  noteEvents(s);
+  snaps.push(s); while (snaps.length > 12) snaps.shift();
+  $('status').style.display = 'none';
+};
+es.onerror = () => { $('status').style.display = 'block'; $('status').textContent = 'connessione persa: il simulatore e’ fermo?'; };
+
+function noteEvents(s) {
+  const now = new Map(s.players.map((p) => [p.id, p]));
+  for (const [id, p] of prevAlive) {
+    const q = now.get(id);
+    if (p.alive && q && !q.alive) pushEvent(q.cashingOut || p.cashoutProgress > 0.95 ? `${p.name} incassa ${p.balance.toFixed(2)} $` : `${p.name} muore (${p.size})`);
+  }
+  for (const [id, q] of now) if (q.alive && !(prevAlive.get(id)?.alive)) pushEvent(`${q.name} entra`);
+  prevAlive = now;
+}
+function pushEvent(t) { events.unshift(t); events.length = Math.min(events.length, 8); $('events').innerHTML = events.map((x) => `<div>${esc(x)}</div>`).join(''); }
+function esc(s) { return String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])); }
+
+function lerp(a, b, t) { return a + (b - a) * t; }
+function lerpAngle(a, b, t) { let d = b - a; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; return a + d * t; }
+
+function view() {
+  if (!snaps.length) return null;
+  const t = performance.now() - BUF_MS - 20;
+  let i = snaps.length - 1;
+  while (i > 0 && snaps[i - 1]._t > t) i--;
+  const b = snaps[i], a = snaps[Math.max(0, i - 1)];
+  if (a === b || b._t <= a._t) return b;
+  const k = Math.max(0, Math.min(1, (t - a._t) / (b._t - a._t)));
+  const pa = new Map(a.players.map((p) => [p.id, p]));
+  return {
+    ...b,
+    world: { ...b.world, r: lerp(a.world.r, b.world.r, k) },
+    players: b.players.map((p) => {
+      const q = pa.get(p.id);
+      if (!q || !q.alive || !p.alive) return p;
+      const n = Math.min(p.segs.length, q.segs.length);
+      const segs = p.segs.map((g, j) => j < n ? [lerp(q.segs[j][0], g[0], k), lerp(q.segs[j][1], g[1], k)] : g);
+      return { ...p, hx: lerp(q.hx, p.hx, k), hy: lerp(q.hy, p.hy, k), angle: lerpAngle(q.angle, p.angle, k), segs };
+    }),
+  };
+}
+
+// --- disegno -------------------------------------------------------------------------
+function draw() {
+  requestAnimationFrame(draw);
+  const s = view();
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.fillStyle = '#0b0f17'; ctx.fillRect(0, 0, W, H);
+  if (!s) return;
+  const alive = s.players.filter((p) => p.alive);
+  let me = s.players.find((p) => p.id === (follow || you));
+  if (!me || !me.alive) me = s.players.find((p) => p.id === you && p.alive) || alive.sort((x, y) => y.size - x.size)[0] || me;
+  const cx = me ? me.hx : 0, cy = me ? me.hy : 0;
+  const z = zoom * Math.min(W, H) / 1100;
+  const X = (x) => (x - cx) * z + W / 2, Y = (y) => (y - cy) * z + H / 2;
+
+  // griglia
+  ctx.strokeStyle = '#121928'; ctx.lineWidth = 1;
+  const g = 100, x0 = Math.floor((cx - W / 2 / z) / g) * g, y0 = Math.floor((cy - H / 2 / z) / g) * g;
+  ctx.beginPath();
+  for (let x = x0; x < cx + W / 2 / z; x += g) { ctx.moveTo(X(x), 0); ctx.lineTo(X(x), H); }
+  for (let y = y0; y < cy + H / 2 / z; y += g) { ctx.moveTo(0, Y(y)); ctx.lineTo(W, Y(y)); }
+  ctx.stroke();
+  // fuori dal muro
+  const R = s.world.r;
+  ctx.save();
+  ctx.beginPath(); ctx.rect(0, 0, W, H); ctx.arc(X(0), Y(0), R * z, 0, Math.PI * 2, true);
+  ctx.fillStyle = 'rgba(120,20,20,.18)'; ctx.fill('evenodd');
+  ctx.restore();
+  ctx.strokeStyle = '#ff3b3b'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(X(0), Y(0), R * z, 0, Math.PI * 2); ctx.stroke();
+
+  // cibo
+  for (const f of s.foods) {
+    const out = f[0] * f[0] + f[1] * f[1] > R * R;
+    const gold = f[2] === 'gold';
+    const px = X(f[0]), py = Y(f[1]);
+    if (px < -20 || py < -20 || px > W + 20 || py > H + 20) continue;
+    ctx.globalAlpha = out ? 0.25 : 1;
+    ctx.fillStyle = f[3];
+    if (gold) { ctx.shadowColor = '#ffd700'; ctx.shadowBlur = 12; }
+    ctx.beginPath(); ctx.arc(px, py, Math.max(1.5, (gold ? 10 : 7) * z), 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+  ctx.globalAlpha = 1;
+
+  // serpenti (prima gli altri, poi quello seguito)
+  const order = alive.slice().sort((a, b) => (a === me) - (b === me));
+  for (const p of order) {
+    const th = p.thickness * z;
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    if (p.boostAmount > 0.05) { ctx.shadowColor = p.color; ctx.shadowBlur = 18 * p.boostAmount; }
+    ctx.strokeStyle = shade(p.color, -0.35); ctx.lineWidth = th * 2 + 2;
+    path(p, X, Y); ctx.stroke();
+    ctx.strokeStyle = p.color; ctx.lineWidth = th * 2;
+    path(p, X, Y); ctx.stroke();
+    ctx.shadowBlur = 0;
+    // testa e occhi
+    const hx = X(p.hx), hy = Y(p.hy);
+    ctx.fillStyle = shade(p.color, 0.15); ctx.beginPath(); ctx.arc(hx, hy, th * 1.15, 0, Math.PI * 2); ctx.fill();
+    for (const side of [-1, 1]) {
+      const ex = hx + Math.cos(p.angle + side * 0.55) * th * 0.65, ey = hy + Math.sin(p.angle + side * 0.55) * th * 0.65;
+      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(ex, ey, th * 0.33, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(ex + Math.cos(p.angle) * th * 0.12, ey + Math.sin(p.angle) * th * 0.12, th * 0.17, 0, Math.PI * 2); ctx.fill();
+    }
+    if (p.cashingOut) {
+      ctx.strokeStyle = '#2ee66b'; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.arc(hx, hy, th * 2.2 + 6, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * p.cashoutProgress); ctx.stroke();
+    }
+    ctx.fillStyle = p.id === you ? '#2ee66b' : '#e8edf5';
+    ctx.font = '12px ui-sans-serif, system-ui'; ctx.textAlign = 'center';
+    ctx.fillText(`${p.name} · ${p.balance.toFixed(2)}$`, hx, hy - th * 2 - 10);
+  }
+  minimap(s, me);
+  hud(s, me);
+}
+
+function path(p, X, Y) {
+  ctx.beginPath();
+  ctx.moveTo(X(p.hx), Y(p.hy));
+  for (const g of p.segs) ctx.lineTo(X(g[0]), Y(g[1]));
+}
+
+function shade(hex, k) {
+  const n = parseInt(hex.slice(1), 16);
+  let r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  const f = (c) => Math.max(0, Math.min(255, Math.round(k < 0 ? c * (1 + k) : c + (255 - c) * k)));
+  return `rgb(${f(r)},${f(g)},${f(b)})`;
+}
+
+function minimap(s, me) {
+  const size = 150, m = 14, ox = W - size - m, oy = H - size - m, R = 2800;
+  const sx = (x) => ox + size / 2 + (x / R) * size / 2, sy = (y) => oy + size / 2 + (y / R) * size / 2;
+  ctx.fillStyle = 'rgba(12,17,27,.82)'; ctx.beginPath(); ctx.arc(ox + size / 2, oy + size / 2, size / 2, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = '#ff3b3b'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(ox + size / 2, oy + size / 2, s.world.r / R * size / 2, 0, Math.PI * 2); ctx.stroke();
+  for (const f of s.foods) if (f[2] === 'gold') { ctx.fillStyle = '#ffd700'; ctx.fillRect(sx(f[0]) - 1, sy(f[1]) - 1, 2, 2); }
+  for (const p of s.players) if (p.alive) {
+    ctx.fillStyle = p === me ? '#2ee66b' : p.color;
+    ctx.beginPath(); ctx.arc(sx(p.hx), sy(p.hy), p === me ? 3.5 : 2.5, 0, Math.PI * 2); ctx.fill();
+  }
+}
+
+function hud(s, me) {
+  const mine = s.players.find((p) => p.id === you);
+  $('size').textContent = mine ? mine.size : '–';
+  $('bal').textContent = mine ? `${mine.balance.toFixed(3)} $` : '–';
+  $('boost').textContent = mine ? mine.boostAmount.toFixed(2) : '–';
+  $('cash').textContent = mine && mine.cashingOut ? `${Math.round(mine.cashoutProgress * 100)} %` : (mine && !mine.alive ? 'fuori partita' : '–');
+  $('cashbar').style.width = mine && mine.cashingOut ? `${mine.cashoutProgress * 100}%` : '0';
+  $('arena').textContent = `${s.players.filter((p) => p.alive).length} · ${Math.round(s.world.r)}`;
+  const iv = arrivals.length > 2 ? (arrivals[arrivals.length - 1] - arrivals[0]) / (arrivals.length - 1) : 0;
+  $('rate').textContent = `${tickHz.toFixed(2)} Hz · ${iv ? (1000 / iv).toFixed(1) : '–'} /s`;
+  $('lb').innerHTML = s.players.filter((p) => p.alive).sort((a, b) => b.balance - a.balance)
+    .map((p) => `<div class="row ${p.id === you ? 'me' : ''}"><span>${esc(p.name)}</span><span>${p.balance.toFixed(2)} $ · ${p.size}</span></div>`).join('');
+}
+requestAnimationFrame(draw);
+
+// --- comandi (stessi campi del messaggio input del gioco) -----------------------------
+let mouse = { x: 0, y: 0 }, boostDown = false, cashDown = false, lastSent = '';
+cv.addEventListener('mousemove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; });
+cv.addEventListener('mousedown', () => { boostDown = true; });
+addEventListener('mouseup', () => { boostDown = false; });
+cv.addEventListener('wheel', (e) => { zoom = Math.max(0.35, Math.min(2.5, zoom * (e.deltaY > 0 ? 0.9 : 1.1))); e.preventDefault(); }, { passive: false });
+addEventListener('keydown', (e) => {
+  if (e.code === 'Space') boostDown = true;
+  if (e.code === 'KeyC') cashDown = true;
+  if (e.key === '+' || e.key === '=') zoom = Math.min(2.5, zoom * 1.1);
+  if (e.key === '-') zoom = Math.max(0.35, zoom / 1.1);
+  if (e.code === 'KeyF') { const s = snaps[snaps.length - 1]; const a = s ? s.players.filter((p) => p.alive) : []; if (a.length) { const i = a.findIndex((p) => p.id === follow); follow = a[(i + 1) % a.length].id; } }
+  if (e.code === 'Escape') follow = '';
+});
+addEventListener('keyup', (e) => { if (e.code === 'Space') boostDown = false; if (e.code === 'KeyC') cashDown = false; });
+setInterval(() => {
+  const targetDir = Math.atan2(mouse.y - H / 2, mouse.x - W / 2);
+  const body = JSON.stringify({ targetDir, boost: boostDown, cashingOut: cashDown });
+  if (body === lastSent) return;
+  lastSent = body;
+  fetch('/input', { method: 'POST', body, headers: { 'Content-Type': 'application/json' } }).catch(() => {});
+}, 33);
+</script>
+</body>
+</html>

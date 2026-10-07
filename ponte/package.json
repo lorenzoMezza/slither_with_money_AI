@@ -1,0 +1,9 @@
+{
+  "name": "ponte",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Ponte fra l'agente (Python) e l'estensione nel Chrome della persona (WebSocket locale).",
+  "engines": { "node": ">=20" },
+  "dependencies": { "ws": "^8.18.0" }
+}

@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Allenamento IA</title>
+<style>
+:root {
+  --bg: #0d1117; --panel: #151b24; --panel2: #1b2330; --line: #283244; --text: #e6edf3; --muted: #8b98a9;
+  --accent: #2ee66b; --warn: #f0b429; --bad: #ff5d5d; --blue: #58a6ff; --violet: #b48cff; --orange: #ff9a3c;
+  --radius: 10px; --mono: ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: light) {
+  :root { --bg: #f4f6f9; --panel: #ffffff; --panel2: #f0f3f7; --line: #d8dee8; --text: #17202b; --muted: #5c6878; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+header { display: flex; align-items: center; gap: 14px; padding: 12px 20px; border-bottom: 1px solid var(--line); background: var(--panel); position: sticky; top: 0; z-index: 5; flex-wrap: wrap; }
+header h1 { font-size: 17px; margin: 0; font-weight: 650; letter-spacing: .2px; }
+header .sp { flex: 1; }
+.pill { padding: 3px 10px; border-radius: 999px; font-size: 12.5px; font-weight: 600; background: var(--panel2); border: 1px solid var(--line); }
+.pill.run { color: #0b1a10; background: var(--accent); border-color: transparent; }
+.pill.pause { color: #241a00; background: var(--warn); border-color: transparent; }
+.pill.stop { color: var(--muted); }
+.pill.closing { color: #fff; background: var(--bad); border-color: transparent; }
+main { padding: 18px 20px 40px; max-width: 1500px; margin: 0 auto; display: grid; gap: 16px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; }
+.card h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); margin: 0 0 10px; font-weight: 650; }
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.top { display: grid; grid-template-columns: minmax(320px, 420px) 1fr; gap: 16px; }
+@media (max-width: 900px) { .top { grid-template-columns: 1fr; } }
+button { font: inherit; font-weight: 600; border-radius: 8px; border: 1px solid var(--line); background: var(--panel2); color: var(--text); padding: 8px 14px; cursor: pointer; }
+button:hover:not(:disabled) { filter: brightness(1.15); }
+button:disabled { opacity: .38; cursor: not-allowed; }
+button.go { background: var(--accent); color: #0b1a10; border-color: transparent; }
+button.pa { background: var(--warn); color: #241a00; border-color: transparent; }
+button.st { background: var(--bad); color: #fff; border-color: transparent; }
+button.ghost { background: transparent; }
+button.big { padding: 11px 18px; font-size: 15px; }
+select, input, textarea { font: inherit; color: var(--text); background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; }
+textarea { width: 100%; font-family: var(--mono); font-size: 12.5px; min-height: 60px; }
+label { color: var(--muted); font-size: 12.5px; display: grid; gap: 4px; }
+details summary { cursor: pointer; color: var(--muted); margin: 10px 0 6px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 10px; }
+.note { color: var(--muted); font-size: 12.5px; }
+.msg { min-height: 18px; font-size: 13px; margin-top: 8px; }
+.msg.err { color: var(--bad); } .msg.ok { color: var(--accent); }
+.kpis { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.kpi { background: var(--panel2); border-radius: 8px; padding: 9px 11px; }
+.kpi .k { color: var(--muted); font-size: 11.5px; text-transform: uppercase; letter-spacing: .4px; }
+.kpi .v { font-size: 20px; font-weight: 650; font-variant-numeric: tabular-nums; margin-top: 2px; }
+.kpi .s { color: var(--muted); font-size: 12px; }
+.bar { height: 6px; border-radius: 4px; background: var(--line); overflow: hidden; margin-top: 6px; }
+.bar > i { display: block; height: 100%; background: var(--accent); }
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); }
+.tab { background: none; border: none; border-bottom: 2px solid transparent; border-radius: 0; padding: 9px 14px; color: var(--muted); }
+.tab.on { color: var(--text); border-bottom-color: var(--accent); }
+.pane { display: none; } .pane.on { display: grid; gap: 16px; }
+.charts { display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 14px; }
+.chart { background: var(--panel2); border-radius: 8px; padding: 10px 12px 6px; }
+.chart .t { font-weight: 600; font-size: 13px; } .chart .d { color: var(--muted); font-size: 12px; }
+.chart canvas { width: 100%; height: 190px; display: block; margin-top: 6px; }
+.legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin: 4px 0 2px; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+th, td { text-align: right; padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+th { color: var(--muted); font-weight: 600; font-size: 12px; }
+.pos { color: var(--accent); } .neg { color: var(--bad); }
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 1000px) { .cols { grid-template-columns: 1fr; } }
+.ladder { display: grid; gap: 7px; }
+.ladder .l { display: grid; grid-template-columns: 105px 1fr 56px 48px; gap: 8px; align-items: center; font-size: 13px; }
+.events { font-family: var(--mono); font-size: 12px; max-height: 300px; overflow: auto; white-space: pre-wrap; color: var(--muted); }
+.console { font-family: var(--mono); font-size: 12px; background: #090c11; color: #c9d4df; border-radius: 8px; padding: 10px 12px; height: 520px; overflow: auto; white-space: pre-wrap; word-break: break-word; }
+.console.short { height: 220px; }
+.windows { display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 14px; }
+.win { background: var(--panel2); border-radius: 8px; overflow: hidden; border: 1px solid var(--line); }
+.win .h { display: flex; justify-content: space-between; align-items: center; padding: 7px 10px; font-weight: 600; font-size: 13px; }
+.win .h a { color: var(--blue); font-weight: 500; text-decoration: none; font-size: 12.5px; }
+.win iframe { width: 100%; aspect-ratio: 4 / 3; border: 0; display: block; background: #000; }
+.win.duel iframe { aspect-ratio: 16 / 9; }
+.placeholder { border: 1px dashed var(--line); border-radius: 8px; padding: 30px; text-align: center; color: var(--muted); }
+.banner { background: color-mix(in srgb, var(--warn) 18%, transparent); border: 1px solid var(--warn); border-radius: 8px; padding: 8px 12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Allenamento IA · moneyslither</h1>
+  <span id="pill" class="pill stop">fermo</span>
+  <span class="sp"></span>
+  <label style="display:flex;align-items:center;gap:8px">corsa
+    <select id="runSel"></select>
+  </label>
+</header>
+
+<main>
+  <div id="banner" class="banner" hidden></div>
+
+  <div class="top">
+    <section class="card">
+      <h2>Controllo</h2>
+      <div class="row">
+        <input id="newName" placeholder="nuova corsa (es. prima)" style="flex:1;min-width:140px">
+      </div>
+      <p class="note" id="runNote" style="margin:6px 0 10px"></p>
+      <div class="row">
+        <button id="bStart" class="go big">▶ Avvia</button>
+        <button id="bPause" class="pa big">❚❚ Pausa</button>
+        <button id="bResume" class="go big">▶ Riprendi</button>
+        <button id="bStop" class="st big">■ Ferma</button>
+      </div>
+      <details>
+        <summary>Impostazioni per l'avvio</summary>
+        <p class="note">Vuoto = valore salvato della corsa (o quello predefinito, se è nuova).</p>
+        <div class="grid2">
+          <label>lobby in parallelo<input id="oMondi" type="number" min="8" placeholder="384"></label>
+          <label>iterazioni (0 = senza fine)<input id="oIter" type="number" min="0" placeholder="0"></label>
+          <label>fase (1 predatore, 2 completo)<input id="oFase" type="number" min="1" max="2" step="1" placeholder="1"></label>
+        </div>
+        <label style="margin-top:8px"><span><input id="oSmall" type="checkbox"> prova a scala ridotta (solo per verificare che tutto funzioni)</span></label>
+        <label style="margin-top:8px">altre impostazioni, una per riga (sezione.chiave=valore)
+          <textarea id="oAltre" placeholder="ppo.lr=0.0002&#10;env.copie=[1,4]"></textarea></label>
+      </details>
+      <div class="row" style="margin-top:10px">
+        <button id="bDelete" class="ghost">Cancella questa corsa…</button>
+      </div>
+      <div id="msg" class="msg"></div>
+    </section>
+
+    <section class="card">
+      <h2>Stato</h2>
+      <div class="kpis" id="kpis"></div>
+    </section>
+  </div>
+
+  <section class="card" style="padding-top:6px">
+    <div class="tabs">
+      <button class="tab on" data-tab="prog">Progressi</button>
+      <button class="tab" data-tab="obs">Osserva l'allenamento</button>
+      <button class="tab" data-tab="duel">Gioca contro l'IA</button>
+      <button class="tab" data-tab="cons">Console</button>
+    </div>
+
+    <div class="pane on" id="tab-prog" style="margin-top:14px">
+      <div>
+        <h2 style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px">Allievo · ultime 20 iterazioni</h2>
+        <div style="overflow:auto"><table id="learners"></table></div>
+      </div>
+      <div class="charts" id="charts"></div>
+      <div class="cols">
+        <div>
+          <h2 style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px">Bot: quanto l'allievo li batte</h2>
+          <div class="ladder" id="ladder"></div>
+        </div>
+        <div>
+          <h2 style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px">Banco di prova: profitto per scenario</h2>
+          <div style="overflow:auto"><table id="bench"></table></div>
+        </div>
+      </div>
+      <div>
+        <h2 style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px">Eventi
+          <a id="diario" href="#" style="float:right;font-weight:normal;text-transform:none;letter-spacing:0" title="Il diario della corsa: un solo file di testo con tutto quello che è successo, da passare per una diagnosi">scarica il diario</a></h2>
+        <div class="events" id="events"></div>
+      </div>
+    </div>
+
+    <div class="pane" id="tab-obs" style="margin-top:14px">
+      <div class="row">
+        <label>agente<select id="obsWho"></select></label>
+        <label>finestre<select id="obsN"><option>1</option><option>2</option><option selected>3</option></select></label>
+        <button id="bObs" class="go">👁 Osserva allenamento</button>
+        <button id="bObsClose" class="st">Chiudi osservazione</button>
+        <span class="note" id="obsState"></span>
+      </div>
+      <p class="note" style="margin:0">Partite dal vivo a tempo reale, in un processo separato sulla CPU: l'addestramento continua.
+        Il modello si aggiorna da solo a ogni nuova partita. Nelle finestre: F cambia il serpente seguito.</p>
+      <div class="windows" id="obsWins"><div class="placeholder">Nessuna osservazione aperta.</div></div>
+      <div><div class="note" style="margin-bottom:6px">partite osservate</div><div class="console short" id="obsLog"></div></div>
+    </div>
+
+    <div class="pane" id="tab-duel" style="margin-top:14px">
+      <div class="row">
+        <label>avversario<select id="duelWho"></select></label>
+        <label>agenti IA<select id="duelN"><option selected>1</option><option>2</option><option>3</option><option>4</option></select></label>
+        <label>bot<select id="duelBots"><option selected>0</option><option>1</option><option>2</option><option>3</option></select></label>
+        <label>abilità bot<select id="duelSkill"><option>0.5</option><option selected>0.8</option><option>1.0</option></select></label>
+        <button id="bDuel" class="go">🎮 Gioca contro l'IA</button>
+        <button id="bDuelClose" class="st">Chiudi sfida</button>
+        <span class="note" id="duelState"></span>
+      </div>
+      <p class="note" style="margin:0">Clicca dentro il gioco, poi: <b>mouse</b> = direzione · <b>clic o spazio</b> = boost · <b>C tenuto 3 s</b> = cashout.
+        Il tuo serpente è quello verde. Finita una partita ne parte un'altra.</p>
+      <div id="duelWin"><div class="placeholder">Nessuna sfida aperta.</div></div>
+      <div><div class="note" style="margin-bottom:6px">risultati</div><div class="console short" id="duelLog"></div></div>
+    </div>
+
+    <div class="pane" id="tab-cons" style="margin-top:14px">
+      <div class="row"><span class="note">uscita dell'addestramento della corsa selezionata (corse/&lt;nome&gt;/uscita.log)</span>
+        <span class="sp" style="flex:1"></span><label><span><input type="checkbox" id="autoScroll" checked> scorri in fondo</span></label></div>
+      <div class="console" id="console"></div>
+    </div>
+  </section>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const COLORS = { allievo: '#2ee66b' };
+const colorOf = (n, i) => COLORS[n] || ['#2ee66b', '#58a6ff', '#ff9a3c', '#b48cff', '#f0b429', '#ff5d5d'][i % 6];
+const STYLES = ['raccoglitore', 'cacciatore', 'avvoltoio', 'ariete', 'esca', 'codardo', 'spingitore', 'accerchiatore', 'affiancatore', 'imprevedibile', 'misto'];
+let S = { corse: [], addestramento: null, osserva: {}, sfida: {} };
+let D = null, run = null, logPos = { uscita: 0, osserva: 0, sfida: 0 }, logRun = null, tab = 'prog';
+
+async function api(path, body) {
+  const r = await fetch(path, body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {});
+  const j = await r.json();
+  if (!r.ok || j.ok === false || j.errore) throw new Error(j.errore || r.statusText);
+  return j;
+}
+function say(t, ok) { const m = $('msg'); m.textContent = t || ''; m.className = 'msg ' + (ok ? 'ok' : 'err'); if (t) setTimeout(() => { if (m.textContent === t) m.textContent = ''; }, 7000); }
+async function act(path, body, okText) {
+  try { await api(path, body || {}); if (okText) say(okText, true); await refreshState(); setTimeout(refreshState, 800); }
+  catch (e) { say(e.message); }
+}
+const fmt = (v, d = 2) => (v == null || isNaN(v)) ? '–' : Number(v).toFixed(d);
+const pct = (v) => (v == null || isNaN(v)) ? '–' : Math.round(v * 100) + '%';
+const sgn = (v) => (v == null || isNaN(v)) ? '–' : (v >= 0 ? '+' : '') + Number(v).toFixed(2);
+const big = (v) => v == null ? '–' : v >= 1e9 ? (v / 1e9).toFixed(2) + ' G' : v >= 1e6 ? (v / 1e6).toFixed(2) + ' M' : v >= 1e3 ? (v / 1e3).toFixed(1) + ' k' : String(Math.round(v));
+const dur = (s) => { s = Math.round(s || 0); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60); return h ? `${h} h ${m} min` : `${m} min ${s % 60} s`; };
+const esc = (t) => String(t).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+
+// --- stato e controlli ----------------------------------------------------------------------
+async function refreshState() {
+  try { S = await api('/api/stato'); } catch (e) { return; }
+  const sel = $('runSel');
+  const want = run || (S.addestramento && S.addestramento.corsa) || S.corse[0] || null;
+  const opts = S.corse.join('|');
+  if (sel.dataset.opts !== opts) {
+    sel.innerHTML = S.corse.length ? S.corse.map((c) => `<option>${esc(c)}</option>`).join('') : '<option value="">(nessuna corsa)</option>';
+    sel.dataset.opts = opts;
+  }
+  if (want && S.corse.includes(want)) sel.value = want;
+  if (run !== (sel.value || null)) setRun(sel.value || null);
+  renderControls();
+  renderHelpers();
+}
+function setRun(r) {
+  run = r; D = null; logPos = { uscita: 0, osserva: 0, sfida: 0 }; logRun = r;
+  $('console').textContent = ''; $('obsLog').textContent = ''; $('duelLog').textContent = '';
+  refreshData();
+}
+function renderControls() {
+  const t = S.addestramento, mine = t && t.corsa === run;
+  const st = t ? t.stato : 'fermo';
+  const pill = $('pill');
+  pill.textContent = t ? `${st} · ${t.corsa}` : 'fermo';
+  pill.className = 'pill ' + (st === 'in pausa' ? 'pause' : st === 'in chiusura' ? 'closing' : t ? 'run' : 'stop');
+  const newName = $('newName').value.trim();
+  $('bStart').disabled = !!t || (!newName && !run);
+  $('bStart').textContent = t ? '▶ Avvia (già in corso)' : newName ? `▶ Avvia «${newName}»` : run ? (D && D.ha_modello ? '▶ Riprendi da salvataggio' : '▶ Avvia') : '▶ Avvia';
+  $('bPause').disabled = !(t && (st === 'in corso'));
+  $('bResume').disabled = !(t && st === 'in pausa');
+  $('bStop').disabled = !(t && (st === 'in corso' || st === 'in pausa'));
+  $('bDelete').disabled = !run || mine;
+  $('bPause').hidden = t && st === 'in pausa';
+  $('bResume').hidden = !(t && st === 'in pausa');
+  const b = $('banner');
+  if (t && !mine && run) { b.hidden = false; b.innerHTML = `Si sta addestrando la corsa <b>${esc(t.corsa)}</b>, non quella selezionata. <button class="ghost" onclick="pick('${esc(t.corsa)}')">vai</button>`; }
+  else b.hidden = true;
+  $('runNote').textContent = newName ? `Verrà creata la corsa «${newName}» (o ripresa, se esiste già).`
+    : run ? (D && D.ha_modello ? `Avvia riprende «${run}» dall'ultimo salvataggio.` : `Corsa «${run}».`) : 'Scrivi un nome per creare la prima corsa.';
+}
+function pick(r) { $('runSel').value = r; setRun(r); renderControls(); }
+$('runSel').onchange = (e) => { setRun(e.target.value || null); renderControls(); };
+$('newName').oninput = renderControls;
+$('bStart').onclick = () => {
+  const name = $('newName').value.trim() || run;
+  const imp = {};
+  if ($('oMondi').value) imp['env.mondi'] = $('oMondi').value;
+  if ($('oFase').value) imp['fase'] = String(Number($('oFase').value));
+  act('/api/avvia', { corsa: name, piccola: $('oSmall').checked, iterazioni: Number($('oIter').value || 0), imposta: imp, altre: $('oAltre').value },
+    `avviato «${name}»: la prima iterazione arriva in ~20 s`).then(() => { if ($('newName').value.trim()) { run = name; $('newName').value = ''; } });
+};
+$('bPause').onclick = () => act('/api/pausa', {}, 'in pausa: il processo è congelato, nulla va perso');
+$('bResume').onclick = () => act('/api/riprendi', {}, 'ripreso');
+$('bStop').onclick = () => { if (confirm('Fermare l\'addestramento? Finisce l\'iterazione in corso, salva tutto ed esce. Si riprende poi con Avvia.')) act('/api/ferma', {}, 'fermata in corso: salvataggio a fine iterazione…'); };
+$('bDelete').onclick = () => {
+  const n = prompt(`Per cancellare DEFINITIVAMENTE la corsa «${run}» (pesi, lega, registri) scrivi il suo nome:`);
+  if (n === run) act('/api/cancella', { corsa: run }, `corsa «${run}» cancellata`).then(() => { run = null; });
+  else if (n !== null) say('nome diverso: non cancello nulla');
+};
+
+// --- dati -------------------------------------------------------------------------------------
+async function refreshData() {
+  if (!run) { renderData(); return; }
+  try { D = await api('/api/dati?corsa=' + encodeURIComponent(run)); } catch (e) { D = null; }
+  $('diario').href = '/diario.txt?corsa=' + encodeURIComponent(run);
+  renderData();
+  renderControls();
+}
+function kpi(k, v, s, bar) { return `<div class="kpi"><div class="k">${k}</div><div class="v">${v}</div>${s ? `<div class="s">${s}</div>` : ''}${bar != null ? `<div class="bar"><i style="width:${Math.max(0, Math.min(100, bar * 100))}%"></i></div>` : ''}</div>`; }
+function renderData() {
+  const L = (D && D.vivo) || {};
+  const t = S.addestramento, mine = t && t.corsa === run;
+  const age = L.ora ? (Date.now() / 1000 - L.ora) : null;
+  const E = L.episodi || {};
+  $('kpis').innerHTML = !run ? '<div class="note">Nessuna corsa selezionata.</div>' : !L.iter ? `<div class="note">${mine ? 'In avvio: la prima iterazione arriva in ~20 s…' : 'Ancora nessun dato per questa corsa.'}</div>` : [
+    kpi('fase ' + (L.fase || 1), fmt(E.punti, 2), `punti per episodio · uccisioni ${fmt(E.uccisioni, 2)} · bottino ${fmt(E.bottino_mio, 2)}+${fmt(E.bottino_altrui, 2)}`),
+    kpi('iterazione', L.iter, (age != null ? `aggiornata ${Math.round(age)} s fa` : '') + (L.riscaldamento ? ' · solo critico' : '')),
+    kpi('campioni', big(L.campioni), dur(L.secondi) + ' in questa sessione'),
+    kpi('velocità', big(L.velocita) + '/s', `${fmt(L.t_iterazione, 1)} s per iterazione`),
+    kpi('tempo di gioco', '×' + Math.round(L.tempo_reale_x || 0), 'rispetto al tempo reale'),
+    kpi('cashout', (L.fase || 1) === 1 ? 'bloccato' : pct(E.incasso), (L.fase || 1) === 1 ? 'fase 1: solo caccia e raccolta' : `senza oro ${pct(E.uscita_pulita)} · con oro ${pct(E.uscita_oro)} · lobby vuota ${pct(E.uscita_vuota)}`),
+    kpi('morte', pct(E.morte), `fine partita ${pct(E.forzati)} · durata ${fmt(E.durata, 0)} s`),
+    kpi('torneo', (L.campioni_torneo || []).length, `campioni · ${L.gironi || 0} gironi · in campo ${(L.rosa || []).length}`),
+    kpi('miglior fitness', L.migliore == null ? '–' : sgn(L.migliore), 'banco di prova'),
+    kpi('partite', big(L.partite), 'giocate in questa sessione'),
+  ].join('');
+  renderLearners(L);
+  renderCharts();
+  renderLadder(L);
+  renderBench();
+  $('events').textContent = D ? D.eventi.slice().reverse().join('\n') : '';
+  fillModelSelects();
+}
+function recent(n) {
+  // Media delle ultime iterazioni, pesata per episodi: una sola iterazione ne ha troppo pochi.
+  const s = (D && D.serie && D.serie[n]) || {}, ep = (s.ep_episodi || []).slice(-20);
+  const out = { episodi: ep.reduce((a, p) => a + p[1], 0) };
+  for (const k of ['punti', 'uccisioni', 'bottino_mio', 'bottino_altrui', 'cibo', 'profitto', 'morte', 'incasso', 'forzati', 'uscita_pulita', 'uscita_oro', 'uscita_vuota', 'durata']) {
+    const pts = (s['ep_' + k] || []).slice(-20);
+    let w = 0, v = 0;
+    pts.forEach(([it, y]) => { const e = ep.find((p) => p[0] === it); const wt = e ? e[1] : 1; w += wt; v += wt * y; });
+    out[k] = w ? v / w : null;
+  }
+  return out;
+}
+function renderLearners(L) {
+  if (!(D && D.serie && D.serie.allievo)) { $('learners').innerHTML = '<tr><td class="note">–</td></tr>'; return; }
+  const a = recent('allievo');
+  $('learners').innerHTML = '<tr><th>Elo</th><th>episodi</th><th>punti</th><th>uccisioni</th><th>bottino proprio</th><th>bottino altrui</th><th>cibo</th><th>morte</th><th>fine partita</th><th>cashout</th><th>senza oro</th><th>con oro</th><th>lobby vuota</th><th>profitto</th><th>durata</th></tr>' +
+    `<tr><td>${Math.round(L.elo || 1000)}</td><td>${a.episodi}</td><td>${fmt(a.punti, 2)}</td><td>${fmt(a.uccisioni, 2)}</td><td>${fmt(a.bottino_mio, 2)}</td><td>${fmt(a.bottino_altrui, 2)}</td>` +
+    `<td>${fmt(a.cibo, 0)}</td><td>${pct(a.morte)}</td><td>${pct(a.forzati)}</td><td>${pct(a.incasso)}</td><td>${pct(a.uscita_pulita)}</td><td>${pct(a.uscita_oro)}</td><td>${pct(a.uscita_vuota)}</td>` +
+    `<td class="${a.profitto > 0 ? 'pos' : a.profitto < 0 ? 'neg' : ''}">${sgn(a.profitto)}</td><td>${a.durata != null ? fmt(a.durata, 0) + ' s' : '–'}</td></tr>`;
+}
+function renderLadder(L) {
+  const bt = L.stili_bot || {};
+  $('ladder').innerHTML = STYLES.map((s) => `<div class="l"><span>${s}</span><div class="bar" style="margin:0"><i style="width:${(bt[s] || 0) * 100}%;background:var(--blue)"></i></div><span></span><span class="${(bt[s] || 0) > .5 ? 'pos' : 'neg'}">${pct(bt[s])}</span></div>`).join('') +
+    '<div class="note">quante volte l\'allievo fa più punti del bot di quello stile (abilità massima); gli stili battuti meno escono più spesso</div>';
+}
+function renderBench() {
+  const B = (D && D.banco) || {};
+  const names = Object.keys(B);
+  if (!names.length) { $('bench').innerHTML = '<tr><td class="note">ancora nessun risultato del banco di prova</td></tr>'; return; }
+  const sc = [...new Set(names.flatMap((n) => Object.keys(B[n])))];
+  $('bench').innerHTML = `<tr><th>scenario</th>${names.map((n) => `<th>${esc(n)}</th>`).join('')}</tr>` +
+    sc.map((s) => `<tr><td>${esc(s)}</td>${names.map((n) => { const v = B[n][s]; return v ? `<td>${fmt(v.punti, 2)} <span class="note">m ${pct(v.morte)} u ${fmt(v.uccisioni, 1)}</span></td>` : '<td>–</td>'; }).join('')}</tr>`).join('');
+}
+
+// --- grafici ------------------------------------------------------------------------------------
+const CHARTS = [
+  { key: 'ep_punti', t: 'Punti per episodio', d: 'la ricompensa della fase: uccisioni, bottino, cibo (e cashout in fase 2)', fmt: (v) => fmt(v, 2), zero: true },
+  { key: 'ep_uccisioni', t: 'Uccisioni per episodio', d: '0,5 punti ciascuna (× 0,7 in fase 2)', fmt: (v) => fmt(v, 2) },
+  { key: 'ep_morte', t: 'Tasso di morte', d: 'episodi finiti con la morte', fmt: pct, pct: true },
+  { key: 'ep_incasso', t: 'Cashout fatti da sé', d: 'solo in fase 2 (in fase 1 il cashout è bloccato)', fmt: pct, pct: true },
+  { key: 'ep_durata', t: 'Durata degli episodi', d: 'secondi di gioco', fmt: (v) => fmt(v, 0) + ' s' },
+  { key: 'elo', t: 'Elo', d: 'scala unica su tutti i partecipanti, bot compresi', fmt: (v) => Math.round(v) },
+  { key: '_fitness', t: 'Fitness sul banco di prova', d: '½ media + ½ scenario peggiore, in punti della fase', fmt: sgn, zero: true },
+  { key: 'var_spiegata', t: 'Varianza spiegata dal valore', d: 'quanto la rete prevede i ritorni (1 = perfetto)', fmt: (v) => fmt(v, 2) },
+];
+function ema(pts, a) { let m = null; return pts.map(([x, y]) => { m = m == null ? y : m + a * (y - m); return [x, m]; }); }
+function renderCharts() {
+  const box = $('charts');
+  if (!box.dataset.built) {
+    box.innerHTML = CHARTS.map((c, i) => `<div class="chart"><div class="t">${c.t}</div><div class="d">${c.d}</div><div class="legend" id="lg${i}"></div><canvas id="cv${i}"></canvas></div>`).join('');
+    box.dataset.built = 1;
+  }
+  CHARTS.forEach((c, i) => {
+    let sets = [];
+    if (D) {
+      if (c.key === '_fitness') sets = Object.entries(D.fitness || {}).map(([n, p]) => ({ n, p }));
+      else sets = Object.entries(D.serie || {}).map(([n, s]) => ({ n, p: s[c.key] || [] }));
+    }
+    sets = sets.filter((s) => s.p.length).map((s, j) => ({ ...s, c: colorOf(s.n, j), sm: c.key.startsWith('_') ? s.p : ema(s.p, 0.15) }));
+    $('lg' + i).innerHTML = sets.map((s) => `<span><i style="background:${s.c}"></i>${esc(s.n)} ${c.fmt(s.sm[s.sm.length - 1][1])}</span>`).join('') || '<span>nessun dato</span>';
+    draw($('cv' + i), sets, c);
+  });
+}
+function draw(cv, sets, c) {
+  const dpr = window.devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight;
+  if (!w) return;
+  cv.width = w * dpr; cv.height = h * dpr;
+  const g = cv.getContext('2d'); g.scale(dpr, dpr); g.clearRect(0, 0, w, h);
+  const css = getComputedStyle(document.documentElement);
+  const line = css.getPropertyValue('--line'), muted = css.getPropertyValue('--muted');
+  const all = sets.flatMap((s) => s.sm.concat(s.p.length < 300 ? s.p : []));
+  if (!all.length) return;
+  let x0 = Math.min(...all.map((p) => p[0])), x1 = Math.max(...all.map((p) => p[0]));
+  let y0 = Math.min(...sets.flatMap((s) => s.sm.map((p) => p[1]))), y1 = Math.max(...sets.flatMap((s) => s.sm.map((p) => p[1])));
+  if (c.pct) { y0 = 0; y1 = Math.max(1, y1); }
+  if (c.zero) { y0 = Math.min(y0, 0); y1 = Math.max(y1, 0); }
+  if (y1 - y0 < 1e-9) { y1 += 1; y0 -= 1; }
+  const pad = (y1 - y0) * 0.08; y0 -= c.pct ? 0 : pad; y1 += c.pct ? 0 : pad;
+  if (x1 === x0) x1 = x0 + 1;
+  const L = 46, R = 8, T = 6, B = 20;
+  const X = (x) => L + (x - x0) / (x1 - x0) * (w - L - R), Y = (y) => T + (1 - (y - y0) / (y1 - y0)) * (h - T - B);
+  g.font = '11px -apple-system, sans-serif'; g.fillStyle = muted; g.strokeStyle = line; g.lineWidth = 1;
+  for (let k = 0; k <= 4; k++) {
+    const y = y0 + (y1 - y0) * k / 4, py = Y(y);
+    g.beginPath(); g.moveTo(L, py); g.lineTo(w - R, py); g.stroke();
+    g.textAlign = 'right'; g.fillText(c.fmt(y), L - 5, py + 4);
+  }
+  if (c.zero && y0 < 0 && y1 > 0) { g.strokeStyle = muted; g.setLineDash([3, 3]); g.beginPath(); g.moveTo(L, Y(0)); g.lineTo(w - R, Y(0)); g.stroke(); g.setLineDash([]); }
+  g.textAlign = 'left'; g.fillText('it ' + Math.round(x0), L, h - 5); g.textAlign = 'right'; g.fillText('it ' + Math.round(x1), w - R, h - 5);
+  for (const s of sets) {
+    g.strokeStyle = s.c; g.lineWidth = 2; g.beginPath();
+    s.sm.forEach(([x, y], k) => { const px = X(x), py = Y(y); k ? g.lineTo(px, py) : g.moveTo(px, py); });
+    g.stroke();
+  }
+}
+window.addEventListener('resize', () => renderCharts());
+
+// --- osservazione e sfida -------------------------------------------------------------------------
+function fillModelSelects() {
+  const lega = (D && D.lega) || [];
+  const opts = [['', 'attuale'], ['migliore', 'il migliore di sempre'],
+    ...lega.slice().reverse().slice(0, 30).map((f) => ['lega/' + f, 'lega: ' + f.replace('.pt', '')])];
+  for (const id of ['obsWho', 'duelWho']) {
+    const sel = $(id), key = opts.map((o) => o[0]).join('|');
+    if (sel.dataset.key === key) continue;
+    const v = sel.value; sel.innerHTML = opts.map(([v, t]) => `<option value="${esc(v)}">${esc(t)}</option>`).join(''); sel.dataset.key = key;
+    if ([...sel.options].some((o) => o.value === v)) sel.value = v;
+  }
+}
+const host = location.hostname || '127.0.0.1';
+function renderHelpers() {
+  const o = S.osserva || {}, d = S.sfida || {};
+  $('bObs').disabled = !run || !(D && D.ha_modello);
+  $('bObsClose').disabled = !o.attiva;
+  $('obsState').textContent = o.attiva ? (o.pronta ? `aperta su «${o.corsa}» (${o.allievo})` : 'in apertura…') : (o.errore ? 'chiusa: ' + o.errore : (D && !D.ha_modello ? 'serve un modello salvato (ogni 10 iterazioni)' : ''));
+  const wins = o.pronta ? o.finestre : [];
+  const wkey = wins.map((w) => w.porta).join(',');
+  if ($('obsWins').dataset.key !== wkey) {
+    $('obsWins').dataset.key = wkey;
+    $('obsWins').innerHTML = wins.length ? wins.map((w) => `<div class="win"><div class="h"><span>${esc(w.titolo)}</span><a href="http://${host}:${w.porta}" target="_blank">apri in una scheda ↗</a></div><iframe src="http://${host}:${w.porta}/"></iframe></div>`).join('')
+      : `<div class="placeholder">${o.attiva ? 'Apertura delle finestre…' : 'Nessuna osservazione aperta.'}</div>`;
+  }
+  $('bDuel').disabled = !run || !(D && D.ha_modello);
+  $('bDuelClose').disabled = !d.attiva;
+  $('duelState').textContent = d.attiva ? (d.pronta ? `in corso contro ${d.allievo}` : 'in apertura…') : (d.errore ? 'chiusa: ' + d.errore : '');
+  const dkey = d.pronta ? 'on' : '';
+  if ($('duelWin').dataset.key !== dkey) {
+    $('duelWin').dataset.key = dkey;
+    $('duelWin').innerHTML = d.pronta ? `<div class="win duel"><div class="h"><span>sfida — clicca nel gioco per giocare</span><a href="http://${host}:8084" target="_blank">apri in una scheda ↗</a></div><iframe src="http://${host}:8084/" allow="fullscreen"></iframe></div>`
+      : `<div class="placeholder">${d.attiva ? 'Apertura della sfida…' : 'Nessuna sfida aperta.'}</div>`;
+  }
+}
+$('bObs').onclick = () => act('/api/osserva', { corsa: run, allievo: $('obsWho').value, finestre: Number($('obsN').value) }, 'osservazione in apertura…');
+$('bObsClose').onclick = () => act('/api/chiudi_osserva', {}, 'osservazione chiusa');
+$('bDuel').onclick = () => act('/api/sfida', { corsa: run, allievo: $('duelWho').value, avversari: Number($('duelN').value), bot: Number($('duelBots').value), abilita: Number($('duelSkill').value) }, 'sfida in apertura…');
+$('bDuelClose').onclick = () => act('/api/chiudi_sfida', {}, 'sfida chiusa');
+
+// --- log ------------------------------------------------------------------------------------------
+async function pullLog(kind, el) {
+  if (!run) return;
+  try {
+    const r = await api(`/api/log?corsa=${encodeURIComponent(run)}&tipo=${kind}&da=${logPos[kind]}`);
+    if (logRun !== run) return;
+    if (r.ricomincia) el.textContent = '';
+    if (r.testo) {
+      const atEnd = el.scrollTop + el.clientHeight >= el.scrollHeight - 30;
+      el.textContent = (el.textContent + r.testo).slice(-300000);
+      if (kind !== 'uscita' || $('autoScroll').checked || atEnd) el.scrollTop = el.scrollHeight;
+    }
+    logPos[kind] = r.fine;
+  } catch (e) { /* corsa senza log */ }
+}
+document.querySelectorAll('.tab').forEach((b) => b.onclick = () => {
+  document.querySelectorAll('.tab').forEach((x) => x.classList.toggle('on', x === b));
+  tab = b.dataset.tab;
+  document.querySelectorAll('.pane').forEach((p) => p.classList.toggle('on', p.id === 'tab-' + tab));
+  if (tab === 'prog') renderCharts();
+});
+
+// --- cicli -----------------------------------------------------------------------------------------
+async function loop() {
+  await refreshState();
+  pullLog('uscita', $('console'));
+  if ((S.osserva || {}).corsa === run) pullLog('osserva', $('obsLog'));
+  if ((S.sfida || {}).corsa === run) pullLog('sfida', $('duelLog'));
+}
+refreshState().then(refreshData);
+setInterval(loop, 2000);
+setInterval(refreshData, 5000);
+</script>
+</body>
+</html>

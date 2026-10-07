@@ -1,0 +1,19 @@
+{
+  "name": "analizer",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Analizzatore in tempo reale di moneyslither.com: registra traffico, sorgente e stato del client mentre giochi e ne estrae le regole e la fisica del server per costruire un simulatore fedele.",
+  "engines": { "node": ">=20" },
+  "bin": { "analizer": "./analizer.js" },
+  "scripts": {
+    "login": "node analizer.js login",
+    "start": "node analizer.js",
+    "live": "node analizer.js live",
+    "analizza": "node analizer.js analizza",
+    "importa": "node analizer.js importa"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

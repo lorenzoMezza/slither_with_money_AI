@@ -1,0 +1,530 @@
+[
+ {
+  "nome": "affinamento@1100",
+  "origine": "/workspace/slither_with_money_AI/allenamento/corse/affinamento/lega/allievo_1100.pt",
+  "etichetta": "lega/allievo@1100",
+  "banco": {
+   "punti": 8.882840909090909,
+   "profitto": 2.0829090909090913,
+   "morte": 0.0,
+   "cashout": 1.0,
+   "uccisioni": 1.7272727272727273,
+   "cibo": 5.2272727272727275,
+   "partite": 22
+  },
+  "torneo": {
+   "punti": 4.761517361111111,
+   "profitto": 0.4132142857142857,
+   "morte": 0.3333333333333333,
+   "cashout": 0.625,
+   "uccisioni": 0.9583333333333334,
+   "cibo": 5.5,
+   "partite": 48
+  },
+  "punteggio": 6.82217913510101
+ },
+ {
+  "nome": "affinamento@1800",
+  "origine": "/workspace/slither_with_money_AI/allenamento/corse/affinamento/lega/allievo_1800.pt",
+  "etichetta": "lega/allievo@1800",
+  "banco": {
+   "punti": 8.514704545454542,
+   "profitto": 1.8130318181818177,
+   "morte": 0.045454545454545456,
+   "cashout": 0.9545454545454546,
+   "uccisioni": 1.6818181818181819,
+   "cibo": 5.409090909090909,
+   "partite": 22
+  },
+  "torneo": {
+   "punti": 5.119767361111111,
+   "profitto": 0.4736160714285714,
+   "morte": 0.3333333333333333,
+   "cashout": 0.6666666666666666,
+   "uccisioni": 1.0416666666666667,
+   "cibo": 4.208333333333333,
+   "partite": 48
+  },
+  "punteggio": 6.817235953282827
+ },
+ {
+  "nome": "affinamento@2000",
+  "origine": "/workspace/slither_with_money_AI/allenamento/corse/affinamento/lega/allievo_2000.pt",
+  "etichetta": "lega/allievo@2000",
+  "banco": {
+   "punti": 7.9505174825174825,
+   "profitto": 1.666618181818182,
+   "morte": 0.09090909090909091,
+   "cashout": 0.9090909090909091,
+   "uccisioni": 1.5,
+   "cibo": 4.045454545454546,
+   "partite": 22
+  },
+  "torneo": {
+   "punti": 5.016586805555555,
+   "profitto": 0.6140625,
+   "morte": 0.25,
+   "cashout": 0.6666666666666666,
+   "uccisioni": 0.8958333333333334,
+   "cibo": 3.7083333333333335,
+   "partite": 48
+  },
+  "punteggio": 6.483552144036519
+ },
+ {
+  "nome": "affinamento@1900",
+  "origine": "/workspace/slither_with_money_AI/allenamento/corse/affinamento/lega/allievo_1900.pt",
+  "etichetta": "lega/allievo@1900",
+  "banco": {
+   "punti": 7.185000000000001,
+   "profitto": 1.2947954545454543,
+   "morte": 0.18181818181818182,
+   "cashout": 0.8181818181818182,
+   "uccisioni": 1.4545454545454546,
+   "cibo": 4.5,
+   "partite": 22
+  },
+  "torneo": {
+   "punti": 5.551354166666667,
+   "profitto": 0.7302901785714285,
+   "morte": 0.14583333333333334,
+   "cashout": 0.8125,
+   "uccisioni": 1.1041666666666667,
+   "cibo": 4.5625,
+   "partite": 48
+  },
+  "punteggio": 6.368177083333334
+ },
+ {
+  "nome": "affinamento@2059 (ultimo)",
+  "origine": "/workspace/slither_with_money_AI/allenamento/corse/affinamento/stato.pt",
+  "etichetta": "affinamento/allievo@2059",
+  "banco": {
+   "punti": 8.134958677685951,
+   "profitto": 1.5813822314049581,
+   "morte": 0.09090909090909091,
+   "cashout": 0.9090909090909091,
+   "uccisioni": 1.6818181818181819,
+   "cibo": 6.136363636363637,
+   "partite": 22
+  },
+  "torneo": {
+   "punti": 4.477125,
+   "profitto": 0.41395089285714276,
+   "morte": 0.25,
+   "cashout": 0.625,
+   "uccisioni": 0.8541666666666666,
+   "cibo": 5.166666666666667,
+   "partite": 48
+  },
+  "punteggio": 6.306041838842976
+ },
+ {
+  "nome": "affinamento@1700",
+  "origine": "/workspace/slither_with_money_AI/allenamento/corse/affinamento/lega/allievo_1700.pt",
+  "etichetta": "lega/allievo@1700",
+  "banco": {
+   "punti": 8.760323232323232,
+   "profitto": 1.8211590909090907,
+   "morte": 0.0,
+   "cashout": 1.0,
+   "uccisioni": 1.6363636363636365,
+   "cibo": 4.2727272727272725,
+   "partite": 22
+  },
+  "torneo": {
+   "punti": 3.5661180555555547,
+   "profitto": 0.19846938775510195,
+   "morte": 0.3541666666666667,
+   "cashout": 0.4583333333333333,
+   "uccisioni": 0.75,
+   "cibo": 4.75,
+   "partite": 48
+  },
+  "punteggio": 6.163220643939393
+ },
+ {
+  "nome": "affinamento@1000",
+  "origine": "/workspace/slither_with_money_AI/allenamento/corse/affinamento/lega/allievo_1000.pt",
+  "etichetta": "lega/allievo@1000",
+  "banco": {
+   "punti": 8.009305785123967,
+   "profitto": 1.3926165289256196,
+   "morte": 0.09090909090909091,
+   "cashout": 0.9090909090909091,
+   "uccisioni": 1.5909090909090908,
+   "cibo": 5.136363636363637,
+   "partite": 22
+  },
+  "torneo": {
+   "punti": 4.126885416666666,
+   "profitto": 0.3407908163265305,
+   "morte": 0.375,
+   "cashout": 0.6041666666666666,
+   "uccisioni": 0.8125,
+   "cibo": 4.0,
+   "partite": 48
+  },
+  "punteggio": 6.068095600895317
+ },
+ {
+  "nome": "affinamento@2040",
+  "origine": "/workspace/slither_with_money_AI/allenamento/corse/affinamento/lega/allievo_2040.pt",
+  "etichetta": "lega/allievo@2040",
+  "banco": {
+   "punti": 8.986384615384615,
+   "profitto": 2.1790800699300696,
+   "morte": 0.0,
+   "cashout": 1.0,
+   "uccisioni": 1.9545454545454546,
+   "cibo": 4.909090909090909,
+   "partite": 22
+  },
+  "torneo": {
+   "punti": 2.935166666666666,
+   "profitto": 0.05374999999999991,
+   "morte": 0.375,
+   "cashout": 0.3958333333333333,
+   "uccisioni": 0.5208333333333334,
+   "cibo": 4.75,
+   "partite": 48
+  },
+  "punteggio": 5.9607756410256405
+ },
+ {
+  "nome": "affinamento@500",
+  "origine": "/workspace/slither_with_money_AI/allenamento/corse/affinamento/lega/allievo_500.pt",
+  "etichetta": "lega/allievo@500",
+  "banco": {
+   "punti": 8.043272727272726,
+   "profitto": 1.9748681818181817,
+   "morte": 0.09090909090909091,
+   "cashout": 0.9090909090909091,
+   "uccisioni": 1.6363636363636365,
+   "cibo": 5.363636363636363,
+   "partite": 22
+  },
+  "torneo": {
+   "punti": 3.8284791666666664,
+   "profitto": 0.25778061224489796,
+   "morte": 0.3958333333333333,
+   "cashout": 0.5208333333333334,
+   "uccisioni": 0.8333333333333334,
+   "cibo": 5.479166666666667,
+   "partite": 48
+  },
+  "punteggio": 5.935875946969696
+ },
+ {
+  "nome": "affinamento@1300",
+  "origine": "/workspace/slither_with_money_AI/allenamento/corse/affinamento/lega/allievo_1300.pt",
+  "etichetta": "lega/allievo@1300",
+  "banco": {
+   "punti": 8.15409090909091,
+   "profitto": 1.7108409090909091,
+   "morte": 0.09090909090909091,
+   "cashout": 0.9090909090909091,
+   "uccisioni": 1.6818181818181819,
+   "cibo": 5.0,
+   "partite": 22
+  },
+  "torneo": {
+   "punti": 3.714628472222222,
+   "profitto": 0.2925573979591836,
+   "morte": 0.3958333333333333,
+   "cashout": 0.5,
+   "uccisioni": 0.8125,
+   "cibo": 5.354166666666667,
+   "partite": 48
+  },
+  "punteggio": 5.934359690656565
+ },
+ {
+  "nome": "affinamento@1600",
+  "origine": "/workspace/slither_with_money_AI/allenamento/corse/affinamento/lega/allievo_1600.pt",
+  "etichetta": "lega/allievo@1600",
+  "banco": {
+   "punti": 7.879636363636362,
+   "profitto": 1.6754136363636363,
+   "morte": 0.09090909090909091,
+   "cashout": 0.8636363636363636,
+   "uccisioni": 1.6818181818181819,
+   "cibo": 6.5,
+   "partite": 22
+  },
+  "torneo": {
+   "punti": 3.875305555555555,
+   "profitto": 0.31026785714285704,
+   "morte": 0.3541666666666667,
+   "cashout": 0.5416666666666666,
+   "uccisioni": 0.6666666666666666,
+   "cibo": 4.875,
+   "partite": 48
+  },
+  "punteggio": 5.877470959595959
+ },
+ {
+  "nome": "affinamento@1400",
+  "origine": "/workspace/slither_with_money_AI/allenamento/corse/affinamento/lega/allievo_1400.pt",
+  "etichetta": "lega/allievo@1400",
+  "banco": {
+   "punti": 7.815409090909089,
+   "profitto": 1.55555,
+   "morte": 0.13636363636363635,
+   "cashout": 0.8636363636363636,
+   "uccisioni": 1.6818181818181819,
+   "cibo": 5.045454545454546,
+   "partite": 22
+  },
+  "torneo": {
+   "punti": 3.4467638888888885,
+   "profitto": 0.1208482142857142,
+   "morte": 0.4791666666666667,
+   "cashout": 0.4791666666666667,
+   "uccisioni": 0.7708333333333334,
+   "cibo": 3.8958333333333335,
+   "partite": 48
+  },
+  "punteggio": 5.631086489898989
+ },
+ {
+  "nome": "affinamento@1200",
+  "origine": "/workspace/slither_with_money_AI/allenamento/corse/affinamento/lega/allievo_1200.pt",
+  "etichetta": "lega/allievo@1200",
+  "banco": {
+   "punti": 7.739272727272726,
+   "profitto": 1.6209636363636364,
+   "morte": 0.13636363636363635,
+   "cashout": 0.8636363636363636,
+   "uccisioni": 1.5909090909090908,
+   "cibo": 4.136363636363637,
+   "partite": 22
+  },
+  "torneo": {
+   "punti": 3.3509374999999992,
+   "profitto": 0.026696428571428538,
+   "morte": 0.5,
+   "cashout": 0.4791666666666667,
+   "uccisioni": 0.6875,
+   "cibo": 4.270833333333333,
+   "partite": 48
+  },
+  "punteggio": 5.545105113636363
+ },
+ {
+  "nome": "affinamento@1500",
+  "origine": "/workspace/slither_with_money_AI/allenamento/corse/affinamento/lega/allievo_1500.pt",
+  "etichetta": "lega/allievo@1500",
+  "banco": {
+   "punti": 7.365636363636363,
+   "profitto": 1.278881818181818,
+   "morte": 0.13636363636363635,
+   "cashout": 0.8181818181818182,
+   "uccisioni": 1.5454545454545454,
+   "cibo": 4.363636363636363,
+   "partite": 22
+  },
+  "torneo": {
+   "punti": 3.4882256944444436,
+   "profitto": 0.20029844576719577,
+   "morte": 0.3958333333333333,
+   "cashout": 0.5,
+   "uccisioni": 0.6041666666666666,
+   "cibo": 4.020833333333333,
+   "partite": 48
+  },
+  "punteggio": 5.426931029040404
+ },
+ {
+  "nome": "affinamento migliore.pt",
+  "origine": "/workspace/slither_with_money_AI/allenamento/corse/affinamento/migliore.pt",
+  "etichetta": "affinamento/allievo@9",
+  "banco": {
+   "punti": 6.8709595959595955,
+   "profitto": 1.3011772727272726,
+   "morte": 0.22727272727272727,
+   "cashout": 0.7727272727272727,
+   "uccisioni": 1.4090909090909092,
+   "cibo": 5.681818181818182,
+   "partite": 22
+  },
+  "torneo": {
+   "punti": 3.910756944444444,
+   "profitto": 0.31728316326530603,
+   "morte": 0.3333333333333333,
+   "cashout": 0.5416666666666666,
+   "uccisioni": 0.6875,
+   "cibo": 4.416666666666667,
+   "partite": 48
+  },
+  "punteggio": 5.39085827020202
+ },
+ {
+  "nome": "fase2@7460",
+  "origine": "/workspace/slither_with_money_AI/allenamento/corse/runpod/lega/allievo_7460.pt",
+  "etichetta": "lega/allievo@7460",
+  "banco": {
+   "punti": 8.02911111111111,
+   "profitto": 1.682286363636364,
+   "morte": 0.09090909090909091,
+   "cashout": 0.9090909090909091,
+   "uccisioni": 1.5454545454545454,
+   "cibo": 4.5,
+   "partite": 22
+  },
+  "torneo": {
+   "punti": 2.2070868055555555,
+   "profitto": -0.19762755102040827,
+   "morte": 0.6458333333333334,
+   "cashout": 0.3333333333333333,
+   "uccisioni": 0.4166666666666667,
+   "cibo": 3.5416666666666665,
+   "partite": 48
+  },
+  "punteggio": 5.1180989583333325
+ },
+ {
+  "nome": "fase2@7420",
+  "origine": "/workspace/slither_with_money_AI/allenamento/corse/runpod/lega/allievo_7420.pt",
+  "etichetta": "lega/allievo@7420",
+  "banco": {
+   "punti": 7.268454545454546,
+   "profitto": 1.053759090909091,
+   "morte": 0.18181818181818182,
+   "cashout": 0.8181818181818182,
+   "uccisioni": 1.4545454545454546,
+   "cibo": 4.5,
+   "partite": 22
+  },
+  "torneo": {
+   "punti": 2.9378437500000003,
+   "profitto": -0.026071428571428645,
+   "morte": 0.5208333333333334,
+   "cashout": 0.4375,
+   "uccisioni": 0.4583333333333333,
+   "cibo": 4.666666666666667,
+   "partite": 48
+  },
+  "punteggio": 5.103149147727273
+ },
+ {
+  "nome": "fase2@7160",
+  "origine": "/workspace/slither_with_money_AI/allenamento/corse/runpod/lega/allievo_7160.pt",
+  "etichetta": "lega/allievo@7160",
+  "banco": {
+   "punti": 7.297999999999999,
+   "profitto": 1.7614454545454548,
+   "morte": 0.18181818181818182,
+   "cashout": 0.8181818181818182,
+   "uccisioni": 1.4545454545454546,
+   "cibo": 4.7272727272727275,
+   "partite": 22
+  },
+  "torneo": {
+   "punti": 2.41678125,
+   "profitto": -0.24140625000000004,
+   "morte": 0.5625,
+   "cashout": 0.3125,
+   "uccisioni": 0.5208333333333334,
+   "cibo": 5.5625,
+   "partite": 48
+  },
+  "punteggio": 4.857390625
+ },
+ {
+  "nome": "fase2 migliore@5784",
+  "origine": "/workspace/slither_with_money_AI/allenamento/corse/runpod/migliore.pt",
+  "etichetta": "runpod/allievo@5784",
+  "banco": {
+   "punti": 7.313681818181816,
+   "profitto": 1.5740000000000003,
+   "morte": 0.18181818181818182,
+   "cashout": 0.8181818181818182,
+   "uccisioni": 1.5454545454545454,
+   "cibo": 6.090909090909091,
+   "partite": 22
+  },
+  "torneo": {
+   "punti": 2.07653125,
+   "profitto": -0.17039540816326534,
+   "morte": 0.5833333333333334,
+   "cashout": 0.2916666666666667,
+   "uccisioni": 0.3541666666666667,
+   "cibo": 3.5416666666666665,
+   "partite": 48
+  },
+  "punteggio": 4.695106534090908
+ },
+ {
+  "nome": "fase2@7300",
+  "origine": "/workspace/slither_with_money_AI/allenamento/corse/runpod/lega/allievo_7300.pt",
+  "etichetta": "lega/allievo@7300",
+  "banco": {
+   "punti": 7.23201652892562,
+   "profitto": 1.3507590909090907,
+   "morte": 0.18181818181818182,
+   "cashout": 0.8181818181818182,
+   "uccisioni": 1.4545454545454546,
+   "cibo": 5.090909090909091,
+   "partite": 22
+  },
+  "torneo": {
+   "punti": 1.9029328703703703,
+   "profitto": -0.4408564814814815,
+   "morte": 0.6875,
+   "cashout": 0.25,
+   "uccisioni": 0.4583333333333333,
+   "cibo": 4.458333333333333,
+   "partite": 48
+  },
+  "punteggio": 4.567474699647995
+ },
+ {
+  "nome": "fase2 mutante@7406",
+  "origine": "/workspace/slither_with_money_AI/allenamento/corse/runpod/lega/mutante_7406_0.pt",
+  "etichetta": "lega/allievo@7406",
+  "banco": {
+   "punti": 7.271454545454545,
+   "profitto": 1.6562681818181817,
+   "morte": 0.13636363636363635,
+   "cashout": 0.8181818181818182,
+   "uccisioni": 1.4545454545454546,
+   "cibo": 4.454545454545454,
+   "partite": 22
+  },
+  "torneo": {
+   "punti": 1.7271666666666665,
+   "profitto": -0.4053571428571428,
+   "morte": 0.7083333333333334,
+   "cashout": 0.2708333333333333,
+   "uccisioni": 0.3333333333333333,
+   "cibo": 4.1875,
+   "partite": 48
+  },
+  "punteggio": 4.499310606060606
+ },
+ {
+  "nome": "affinamento mutante@1866",
+  "origine": "/workspace/slither_with_money_AI/allenamento/corse/affinamento/lega/mutante_1866_0.pt",
+  "etichetta": "lega/allievo@1866",
+  "banco": {
+   "punti": 6.987451790633608,
+   "profitto": 1.1967103305785127,
+   "morte": 0.22727272727272727,
+   "cashout": 0.7727272727272727,
+   "uccisioni": 1.4545454545454546,
+   "cibo": 6.136363636363637,
+   "partite": 22
+  },
+  "torneo": {
+   "punti": 1.6478090277777777,
+   "profitto": -0.46077806122448983,
+   "morte": 0.7083333333333334,
+   "cashout": 0.22916666666666666,
+   "uccisioni": 0.3958333333333333,
+   "cibo": 3.1458333333333335,
+   "partite": 48
+  },
+  "punteggio": 4.317630409205693
+ }
+]
